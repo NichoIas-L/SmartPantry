@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Pencil, Trash2 } from 'lucide-react';
+import { capitalizeWords } from '@/lib/utils';
 
 interface IdentifiedItemProps {
   item: {
@@ -28,25 +29,8 @@ export default function IdentifiedItem({ item, onRemove, onEdit }: IdentifiedIte
   return (
     <div className="p-3 flex justify-between items-center">
       <div className="flex items-center">
-        <div className="h-12 w-12 rounded bg-gray-200 mr-3 flex-shrink-0">
-          {item.imageUrl ? (
-            <img 
-              src={item.imageUrl} 
-              alt={item.name} 
-              className="h-full w-full object-cover rounded"
-              onError={(e) => {
-                // If image fails to load, replace with fallback
-                (e.target as HTMLImageElement).src = 'https://placehold.co/100x100?text=Food';
-              }}
-            />
-          ) : (
-            <div className="h-full w-full flex items-center justify-center bg-gray-200 text-gray-400 rounded">
-              <span className="text-xs">No image</span>
-            </div>
-          )}
-        </div>
         <div>
-          <h4 className="font-medium">{item.name}</h4>
+          <h4 className="font-medium">{capitalizeWords(item.name)}</h4>
           <p className="text-xs text-gray-500">Confidence: {item.confidence}%</p>
         </div>
       </div>

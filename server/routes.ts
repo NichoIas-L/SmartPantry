@@ -160,24 +160,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         const recognizedItems = JSON.parse(jsonMatch[0]);
         
-        // Add image URLs to each item
-        const itemsWithImages = recognizedItems.map((item: any) => ({
+        // Ensure names are lowercase for consistency
+        const processedItems = recognizedItems.map((item: any) => ({
           ...item,
-          imageUrl: `https://source.unsplash.com/100x100/?${encodeURIComponent(item.name.toLowerCase())}`
+          name: item.name.toLowerCase()
         }));
         
-        console.log(`Claude recognized ${itemsWithImages.length} items`);
+        console.log(`Claude recognized ${processedItems.length} items`);
         
-        res.json({ items: itemsWithImages });
+        res.json({ items: processedItems });
       } catch (parseError) {
         console.error("Error parsing Claude response:", parseError);
         
         // Fallback to a default response if parsing fails
         const fallbackItems = [
           {
-            name: "Unidentified Item",
-            confidence: 50,
-            imageUrl: "https://source.unsplash.com/100x100/?food"
+            name: "unidentified item",
+            confidence: 50
           }
         ];
         

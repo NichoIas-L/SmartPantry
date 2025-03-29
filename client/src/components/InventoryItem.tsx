@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { format, formatDistanceToNow } from 'date-fns';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { capitalizeWords } from '@/lib/utils';
 
 interface InventoryItemProps {
   item: {
@@ -46,26 +47,9 @@ export default function InventoryItem({ item, onDelete }: InventoryItemProps) {
   return (
     <div className="py-3 px-1">
       <div className="flex items-center">
-        <div className="h-16 w-16 rounded-lg bg-gray-200 overflow-hidden mr-4 flex-shrink-0">
-          {item.imageUrl ? (
-            <img 
-              src={item.imageUrl} 
-              alt={item.name} 
-              className="h-full w-full object-cover"
-              onError={(e) => {
-                // If image fails to load, replace with fallback
-                (e.target as HTMLImageElement).src = 'https://placehold.co/100x100?text=Food';
-              }}
-            />
-          ) : (
-            <div className="h-full w-full flex items-center justify-center bg-gray-200 text-gray-400">
-              No image
-            </div>
-          )}
-        </div>
         <div className="flex-1">
           <div className="flex justify-between items-start">
-            <h3 className="font-medium">{item.name}</h3>
+            <h3 className="font-medium">{capitalizeWords(item.name)}</h3>
             <span className={`text-xs px-2 py-0.5 rounded ${
               item.location === "Fridge" 
                 ? "bg-blue-100 text-blue-800" 
@@ -110,7 +94,7 @@ export default function InventoryItem({ item, onDelete }: InventoryItemProps) {
             <DialogTitle>Delete Item</DialogTitle>
           </DialogHeader>
           <p className="py-4">
-            Are you sure you want to remove {item.name} from your inventory?
+            Are you sure you want to remove {capitalizeWords(item.name)} from your inventory?
           </p>
           <DialogFooter>
             <Button variant="outline" onClick={() => setConfirmDelete(false)}>

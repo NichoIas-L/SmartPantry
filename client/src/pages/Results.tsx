@@ -10,6 +10,7 @@ import { Plus, Camera } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { queryClient } from '@/lib/queryClient';
+import { capitalizeWords } from '@/lib/utils';
 
 interface ResultsProps {
   recognizedItems: any[];
@@ -48,9 +49,10 @@ export default function Results({
     
     // Create a new item
     const newItem = {
-      name: newItemName,
+      name: newItemName.toLowerCase(),
       confidence: 100,
-      imageUrl: `https://source.unsplash.com/100x100/?${encodeURIComponent(newItemName.toLowerCase())}`
+      // No longer needed as we've removed images
+      // imageUrl: `https://source.unsplash.com/100x100/?${encodeURIComponent(newItemName.toLowerCase())}`
     };
     
     setItems([...items, newItem]);

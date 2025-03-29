@@ -38,7 +38,6 @@ export async function addItemsToInventory(items: any[], location: string) {
         {
           name: item.name,
           location,
-          imageUrl: item.imageUrl,
           confidence: item.confidence,
           // Set default expiry date for items (14 days for fridge, 180 days for cabinet)
           expiryDate: new Date(
