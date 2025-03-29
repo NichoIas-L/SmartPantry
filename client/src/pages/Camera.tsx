@@ -70,6 +70,20 @@ export default function Camera({ onImageCaptured, captureCount = 0 }: CameraProp
       setIsCapturing(false);
     }, 300); // 300ms delay to ensure camera is ready
   }, [webcamRef, navigate, onImageCaptured, toast, isCapturing]);
+  
+  // Continue to processing with the current camera view (without capturing a new image)
+  const handleContinue = useCallback(() => {
+    // Only proceed if camera is ready and we're not already capturing
+    if (!isCameraReady || isCapturing) return;
+    
+    // If we already have images captured, just go to results
+    if (captureCount > 0) {
+      navigate('/results');
+    } else {
+      // Otherwise, capture an image first
+      captureImage();
+    }
+  }, [isCameraReady, isCapturing, captureCount, navigate, captureImage]);
 
   // Configure webcam
   const videoConstraints = {
@@ -161,11 +175,13 @@ export default function Camera({ onImageCaptured, captureCount = 0 }: CameraProp
               Cancel
             </Button>
             <Button 
-              onClick={captureImage}
+              onClick={handleContinue}
               className="flex-1"
               disabled={!isCameraReady}
             >
-              {isCameraReady ? "Continue" : "Waiting for camera..."}
+              {isCameraReady 
+                ? (captureCount > 0 ? "Continue to Results" : "Continue") 
+                : "Waiting for camera..."}
             </Button>
           </div>
         </div>
