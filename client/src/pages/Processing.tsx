@@ -1,20 +1,23 @@
 import { useEffect } from 'react';
 import { useLocation } from 'wouter';
 import { useToast } from '@/hooks/use-toast';
-import { recognizeImage } from '@/lib/imageRecognition';
+import { recognizeImage, addItemsToInventory } from '@/lib/imageRecognition';
+import { queryClient } from '@/lib/queryClient';
 
 interface ProcessingProps {
   imageData: string | null;
   onRecognitionComplete: (items: any[]) => void;
   imageIndex?: number;
   totalImages?: number;
+  selectedLocation?: string;
 }
 
 export default function Processing({ 
   imageData, 
   onRecognitionComplete,
   imageIndex = 0,
-  totalImages = 1
+  totalImages = 1,
+  selectedLocation = "Fridge"
 }: ProcessingProps) {
   const [, navigate] = useLocation();
   const { toast } = useToast();
@@ -72,12 +75,31 @@ export default function Processing({
         // Pass recognized items to parent component
         onRecognitionComplete(recognizedItems);
         
-        // Show success toast
-        toast({
-          title: "Items Recognized",
-          description: `Successfully identified ${recognizedItems.length} items in your fridge.`,
-          duration: 3000,
-        });
+        // Automatically add items to inventory
+        try {
+          await addItemsToInventory(recognizedItems, selectedLocation);
+          
+          // Invalidate inventory queries to refresh data
+          queryClient.invalidateQueries({ queryKey: ['/api/inventory'] });
+          
+          console.log(`Added ${recognizedItems.length} items to ${selectedLocation}`);
+          
+          // Show success toast with added confirmation
+          toast({
+            title: "Items Recognized & Added",
+            description: `Successfully identified and added ${recognizedItems.length} items to your ${selectedLocation.toLowerCase()}.`,
+            duration: 3000,
+          });
+        } catch (error) {
+          console.error("Failed to add items to inventory:", error);
+          
+          // Still show recognition success, but note the inventory issue
+          toast({
+            title: "Items Recognized",
+            description: `Identified ${recognizedItems.length} items, but couldn't add to inventory automatically. You can add them manually on the next screen.`,
+            duration: 5000,
+          });
+        }
         
         // If we have processed all images, go to results
         // Otherwise, go back to camera to take more pictures
@@ -117,7 +139,7 @@ export default function Processing({
     }, 1000);
 
     return () => clearTimeout(timer);
-  }, [imageData, navigate, onRecognitionComplete, toast, imageIndex, totalImages]);
+  }, [imageData, navigate, onRecognitionComplete, toast, imageIndex, totalImages, selectedLocation]);
 
   return (
     <main className="min-h-screen flex items-center justify-center bg-white">

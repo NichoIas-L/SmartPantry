@@ -10,7 +10,7 @@ import { Plus, Camera } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { queryClient } from '@/lib/queryClient';
+import { queryClient, apiRequest } from '@/lib/queryClient';
 import { capitalizeWords } from '@/lib/utils';
 
 interface ResultsProps {
@@ -47,7 +47,7 @@ export default function Results({
     )));
   };
 
-  const handleAddManually = () => {
+  const handleAddManually = async () => {
     if (!newItemName.trim()) return;
     
     // Create a new item with quantity and unit
@@ -58,11 +58,46 @@ export default function Results({
       unit: newItemUnit
     };
     
-    setItems([...items, newItem]);
-    setNewItemName('');
-    setNewItemQuantity('1');
-    setNewItemUnit('');
-    setIsAddingManually(false);
+    try {
+      // Immediately add the item to inventory
+      await apiRequest(
+        'POST',
+        '/api/inventory',
+        {
+          name: capitalizeWords(newItem.name),
+          location: selectedLocation,
+          quantity: newItem.quantity,
+          unit: newItem.unit,
+          addedDate: new Date().toISOString(),
+        }
+      );
+      
+      // Update local state
+      setItems([...items, newItem]);
+      
+      // Show success toast
+      toast({
+        title: "Item Added",
+        description: `${capitalizeWords(newItem.name)} added to your ${selectedLocation}`,
+        variant: "default",
+      });
+      
+      // Clear form
+      setNewItemName('');
+      setNewItemQuantity('1');
+      setNewItemUnit('');
+      setIsAddingManually(false);
+      
+      // Invalidate inventory cache
+      queryClient.invalidateQueries({ queryKey: ['/api/inventory'] });
+    } catch (error) {
+      console.error("Error adding item manually:", error);
+      toast({
+        title: "Error",
+        description: "Failed to add item to inventory",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleAddToInventory = async () => {
@@ -105,14 +140,18 @@ export default function Results({
 
   return (
     <>
-      <Header title="Identified Items" />
+      <Header title="Items Added to Inventory" />
       
       <main className="flex-1 overflow-y-auto pb-16">
         <div className="max-w-md mx-auto px-4 py-6 space-y-6">
           <div className="mb-4 flex justify-between items-start">
             <div>
-              <h2 className="text-xl font-semibold text-gray-800 mb-2">Identified Items</h2>
-              <p className="text-gray-600">Review and confirm the items detected by Claude AI</p>
+              <h2 className="text-xl font-semibold text-gray-800 mb-2">
+                Items Added to {selectedLocation}
+              </h2>
+              <p className="text-gray-600">
+                All recognized items have been added to your inventory. You can add more items manually.
+              </p>
             </div>
             {capturedImagesCount > 1 && (
               <div className="bg-primary/10 text-primary px-3 py-1 rounded-full text-sm font-medium">
@@ -188,10 +227,9 @@ export default function Results({
               <Button 
                 variant="secondary" 
                 className="flex-1"
-                onClick={handleAddToInventory}
-                disabled={isSubmitting || items.length === 0}
+                onClick={() => navigate('/')}
               >
-                {isSubmitting ? "Adding..." : "Add to Inventory"}
+                View Inventory
               </Button>
             </div>
           </div>

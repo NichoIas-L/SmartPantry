@@ -74,6 +74,7 @@ function Router() {
           onRecognitionComplete={handleRecognitionComplete}
           imageIndex={currentImageIndex}
           totalImages={capturedImages.length}
+          selectedLocation={selectedLocation}
         />
       </Route>
       <Route path="/results">

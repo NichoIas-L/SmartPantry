@@ -26,8 +26,8 @@ export async function recognizeImage(imageBase64: string) {
     console.log("Sending image for recognition, data length:", formattedImageData.length);
     
     const response = await apiRequest(
-      "POST",
-      "/api/recognize",
+      'POST',
+      '/api/recognize',
       { imageBase64: formattedImageData }
     );
     
@@ -61,16 +61,19 @@ export async function addItemsToInventory(items: any[], location: string) {
   try {
     const addPromises = items.map(item => 
       apiRequest(
-        "POST",
-        "/api/inventory",
+        'POST',
+        '/api/inventory',
         {
           name: item.name,
           location,
+          quantity: item.quantity || '1',
+          unit: item.unit || '',
           confidence: item.confidence,
           // Set default expiry date for items (14 days for fridge, 180 days for cabinet)
           expiryDate: new Date(
             Date.now() + (location === "Fridge" ? 14 : 180) * 24 * 60 * 60 * 1000
-          ).toISOString()
+          ).toISOString(),
+          addedDate: new Date().toISOString()
         }
       )
     );
