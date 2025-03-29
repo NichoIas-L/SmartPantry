@@ -1,8 +1,8 @@
-import { Home, Calendar, ClipboardList, User } from 'lucide-react';
+import { Home, Calendar, ClipboardList, User, ChefHat } from 'lucide-react';
 import { useLocation } from 'wouter';
 
 interface NavigationProps {
-  activePage: 'home' | 'expiring' | 'lists' | 'profile';
+  activePage: 'home' | 'expiring' | 'lists' | 'profile' | 'recipes';
 }
 
 export default function Navigation({ activePage }: NavigationProps) {
@@ -37,10 +37,11 @@ export default function Navigation({ activePage }: NavigationProps) {
           <div className="w-16"></div> {/* Spacer for FAB */}
           
           <button 
-            className={`flex flex-col items-center py-3 px-4 ${getNavItemClasses('lists')}`}
+            onClick={() => navigate('/recipes')}
+            className={`flex flex-col items-center py-3 px-4 ${getNavItemClasses('recipes')}`}
           >
-            <ClipboardList className="h-6 w-6" />
-            <span className="text-xs mt-1">Lists</span>
+            <ChefHat className="h-6 w-6" />
+            <span className="text-xs mt-1">Recipes</span>
           </button>
           
           <button 

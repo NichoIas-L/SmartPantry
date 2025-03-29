@@ -7,6 +7,7 @@ import Home from "@/pages/Home";
 import Camera from "@/pages/Camera";
 import Processing from "@/pages/Processing";
 import Results from "@/pages/Results";
+import Recipes from "@/pages/Recipes";
 import { useState } from "react";
 
 function Router() {
@@ -81,6 +82,9 @@ function Router() {
           onTakeMorePhotos={handleTakeMorePhotos}
           capturedImagesCount={capturedImages.length}
         />
+      </Route>
+      <Route path="/recipes">
+        <Recipes />
       </Route>
       <Route>
         <NotFound />
