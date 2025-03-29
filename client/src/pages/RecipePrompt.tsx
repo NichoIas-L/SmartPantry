@@ -242,7 +242,7 @@ export default function RecipePrompt() {
             <ChefHat className="h-5 w-5" />
             {selectedIngredients.length > 0 
               ? `Create Recipes with ${selectedIngredients.length} Selected Ingredients` 
-              : "Create Recipes with All Ingredients"}
+              : "Create Recipes with Any Ingredients"}
           </Button>
         </div>
       </div>

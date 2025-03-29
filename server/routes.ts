@@ -260,7 +260,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Recipe suggestion endpoint using Claude
   app.post("/api/recipe-suggestions", async (req: Request, res: Response) => {
     try {
-      const { ingredients, focusIngredient } = req.body;
+      const { ingredients, focusIngredient, filters = {} } = req.body;
+      
+      // Extract filter options
+      const { 
+        simplicity = null, 
+        budget = null,
+        maxCalories = null,
+        maxSugar = null,
+        minProtein = null,
+        maxCarbs = null
+      } = filters;
 
       if (
         !ingredients ||
@@ -305,6 +315,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       } else {
         promptText += `\n\nPlease suggest 3 recipes I could make using ONLY these ingredients and respecting the quantities I have available.`;
+      }
+      
+      // Add filter criteria to the prompt
+      if (simplicity !== null || budget !== null || maxCalories !== null || 
+          maxSugar !== null || minProtein !== null || maxCarbs !== null) {
+        
+        promptText += "\n\nPlease follow these additional recipe preferences:";
+        
+        if (simplicity !== null) {
+          const complexityLevel = simplicity <= 3 ? "very simple" : 
+                                simplicity <= 6 ? "moderately complex" : "complex";
+          promptText += `\n- Complexity: Create ${complexityLevel} recipes (${simplicity}/10 complexity level)`;
+        }
+        
+        if (budget !== null) {
+          const budgetLevel = budget === 1 ? "extremely budget-friendly" :
+                             budget === 2 ? "inexpensive" :
+                             budget === 3 ? "moderately priced" :
+                             budget === 4 ? "somewhat premium" : "luxury";
+          promptText += `\n- Budget: ${budgetLevel} recipes (${budget}/5 budget level)`;
+        }
+        
+        if (maxCalories !== null) {
+          promptText += `\n- Calories: Maximum ${maxCalories} calories per serving`;
+        }
+        
+        if (maxSugar !== null) {
+          promptText += `\n- Sugar: Maximum ${maxSugar}g of sugar per serving`;
+        }
+        
+        if (minProtein !== null) {
+          promptText += `\n- Protein: Minimum ${minProtein}g of protein per serving`;
+        }
+        
+        if (maxCarbs !== null) {
+          promptText += `\n- Carbs: Maximum ${maxCarbs}g of carbohydrates per serving`;
+        }
       }
 
       promptText += ` Do not suggest any ingredients that aren't in my inventory list above, and do not suggest using more of an ingredient than I have. Keep recipes simple and practical.

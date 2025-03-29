@@ -30,6 +30,16 @@ export default function AutoRecipes() {
   const [suggestedRecipes, setSuggestedRecipes] = useState<SuggestedRecipe[]>([]);
   const [focusIngredient, setFocusIngredient] = useState<string | null>(null);
   const [selectedRecipe, setSelectedRecipe] = useState<SuggestedRecipe | null>(null);
+  
+  // Recipe filter states
+  const [simplicity, setSimplicity] = useState<number | null>(null);
+  const [budget, setBudget] = useState<number | null>(null);
+  const [maxCalories, setMaxCalories] = useState<number | null>(null);
+  const [maxSugar, setMaxSugar] = useState<number | null>(null);
+  const [minProtein, setMinProtein] = useState<number | null>(null);
+  const [maxCarbs, setMaxCarbs] = useState<number | null>(null);
+  const [showFilters, setShowFilters] = useState(false);
+  
   const { toast } = useToast();
   
   // Extract chosen ingredient(s) from URL if available
@@ -85,7 +95,7 @@ export default function AutoRecipes() {
         duration: 4000,
       });
       
-      // Call the backend API
+      // Call the backend API with filter options
       const response = await fetch('/api/recipe-suggestions', {
         method: 'POST',
         headers: {
@@ -93,7 +103,15 @@ export default function AutoRecipes() {
         },
         body: JSON.stringify({ 
           ingredients,
-          focusIngredient 
+          focusIngredient,
+          filters: {
+            simplicity,
+            budget,
+            maxCalories,
+            maxSugar,
+            minProtein,
+            maxCarbs
+          }
         }),
       });
 
@@ -157,16 +175,14 @@ export default function AutoRecipes() {
               </Button>
             </div>
           </div>
-          <p className="text-sm text-gray-500 font-medium">
-            <span className="text-teal-600">✓</span> Recipes use <span className="underline">exclusively</span> what's in your inventory
-          </p>
+          {/* Removing the text about recipes using exclusively inventory items as requested */}
         </header>
 
         {/* Inventory summary - improved scrollable design */}
         <section className="px-5 mb-4">
           <div className="bg-white rounded-xl p-4 shadow-sm">
             <div className="flex items-center justify-between mb-2">
-              <h2 className="text-base font-medium">Your Ingredients</h2>
+              <h2 className="text-base font-medium">Recipe Filters</h2>
               <span className="text-xs text-gray-500 px-2 py-0.5 bg-gray-100 rounded-full">
                 {inventoryItems.length} items
               </span>
@@ -177,48 +193,209 @@ export default function AutoRecipes() {
             ) : inventoryItems.length === 0 ? (
               <p className="text-sm text-gray-500">No items in your inventory</p>
             ) : (
-              <div className="overflow-x-auto -mx-1 px-1 pb-1">
-                <div className="flex gap-1.5 flex-nowrap min-w-0">
-                  {/* Focused ingredients first */}
-                  {focusIngredient && (
-                    <div className="flex-none pr-2 border-r border-gray-100 mr-2">
+              <div className="w-full">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="w-full mb-3 flex items-center justify-between"
+                  onClick={() => setShowFilters(!showFilters)}
+                >
+                  <span>Recipe Preferences {showFilters ? '(hide)' : '(show)'}</span>
+                  {showFilters ? (
+                    <ArrowLeft className="h-4 w-4 rotate-90" />
+                  ) : (
+                    <ArrowLeft className="h-4 w-4 -rotate-90" />
+                  )}
+                </Button>
+
+                {showFilters && (
+                  <div className="space-y-4 mt-4">
+                    {/* Simplicity slider (1-10 scale) */}
+                    <div>
+                      <div className="flex justify-between mb-1">
+                        <label className="text-xs font-medium text-gray-700">Simplicity</label>
+                        <span className="text-xs text-gray-500">{simplicity || 'Any'}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-gray-500">Simple</span>
+                        <input 
+                          type="range" 
+                          min="1" 
+                          max="10" 
+                          value={simplicity || 5}
+                          onChange={(e) => setSimplicity(parseInt(e.target.value))}
+                          className="flex-1"
+                        />
+                        <span className="text-xs text-gray-500">Complex</span>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-6 w-6 p-0 text-xs rounded-full"
+                          onClick={() => setSimplicity(null)}
+                        >
+                          ×
+                        </Button>
+                      </div>
+                    </div>
+
+                    {/* Budget slider (1-5 scale) */}
+                    <div>
+                      <div className="flex justify-between mb-1">
+                        <label className="text-xs font-medium text-gray-700">Budget</label>
+                        <span className="text-xs text-gray-500">{budget || 'Any'}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-gray-500">$</span>
+                        <input 
+                          type="range" 
+                          min="1" 
+                          max="5" 
+                          value={budget || 3}
+                          onChange={(e) => setBudget(parseInt(e.target.value))}
+                          className="flex-1"
+                        />
+                        <span className="text-xs text-gray-500">$$$$$</span>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-6 w-6 p-0 text-xs rounded-full"
+                          onClick={() => setBudget(null)}
+                        >
+                          ×
+                        </Button>
+                      </div>
+                    </div>
+
+                    {/* Nutritional preferences */}
+                    <div className="grid grid-cols-2 gap-3">
+                      {/* Max Calories */}
+                      <div>
+                        <label className="text-xs font-medium text-gray-700 block mb-1">Max Calories</label>
+                        <div className="flex">
+                          <input 
+                            type="number" 
+                            placeholder="Any"
+                            value={maxCalories || ''}
+                            onChange={(e) => setMaxCalories(e.target.value ? parseInt(e.target.value) : null)}
+                            className="w-full text-sm rounded-lg border border-gray-200 px-3 py-1"
+                          />
+                          {maxCalories && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="ml-1 h-7 w-7 p-0 text-xs"
+                              onClick={() => setMaxCalories(null)}
+                            >
+                              ×
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Max Sugar */}
+                      <div>
+                        <label className="text-xs font-medium text-gray-700 block mb-1">Max Sugar (g)</label>
+                        <div className="flex">
+                          <input 
+                            type="number" 
+                            placeholder="Any"
+                            value={maxSugar || ''}
+                            onChange={(e) => setMaxSugar(e.target.value ? parseInt(e.target.value) : null)}
+                            className="w-full text-sm rounded-lg border border-gray-200 px-3 py-1"
+                          />
+                          {maxSugar && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="ml-1 h-7 w-7 p-0 text-xs"
+                              onClick={() => setMaxSugar(null)}
+                            >
+                              ×
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Min Protein */}
+                      <div>
+                        <label className="text-xs font-medium text-gray-700 block mb-1">Min Protein (g)</label>
+                        <div className="flex">
+                          <input 
+                            type="number" 
+                            placeholder="Any"
+                            value={minProtein || ''}
+                            onChange={(e) => setMinProtein(e.target.value ? parseInt(e.target.value) : null)}
+                            className="w-full text-sm rounded-lg border border-gray-200 px-3 py-1"
+                          />
+                          {minProtein && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="ml-1 h-7 w-7 p-0 text-xs"
+                              onClick={() => setMinProtein(null)}
+                            >
+                              ×
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Max Carbs */}
+                      <div>
+                        <label className="text-xs font-medium text-gray-700 block mb-1">Max Carbs (g)</label>
+                        <div className="flex">
+                          <input 
+                            type="number" 
+                            placeholder="Any"
+                            value={maxCarbs || ''}
+                            onChange={(e) => setMaxCarbs(e.target.value ? parseInt(e.target.value) : null)}
+                            className="w-full text-sm rounded-lg border border-gray-200 px-3 py-1"
+                          />
+                          {maxCarbs && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="ml-1 h-7 w-7 p-0 text-xs"
+                              onClick={() => setMaxCarbs(null)}
+                            >
+                              ×
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Apply filters button */}
+                    <Button
+                      className="w-full bg-teal-500 hover:bg-teal-600"
+                      onClick={generateRecipes}
+                      disabled={isGenerating}
+                    >
+                      {isGenerating ? 'Generating Recipes...' : 'Generate Recipes'}
+                    </Button>
+                  </div>
+                )}
+
+                {/* Display focused ingredients if any */}
+                {focusIngredient && (
+                  <div className="mt-2">
+                    <div className="flex items-center mb-1">
+                      <span className="text-xs font-medium text-gray-700">Featured Ingredients:</span>
+                    </div>
+                    <div className="flex flex-wrap gap-1.5">
                       {focusIngredient.split(',').map((focusedItem, idx) => {
-                        const matchingItem = inventoryItems.find((item: any) => 
-                          item.name.toLowerCase() === focusedItem.trim().toLowerCase()
-                        );
-                        if (!matchingItem) return null;
-                        
                         return (
                           <span 
                             key={`focus-${idx}`}
-                            className="text-xs px-2.5 py-1.5 rounded-full mr-1.5 whitespace-nowrap bg-teal-500 text-white font-medium"
+                            className="text-xs px-2.5 py-1.5 rounded-full whitespace-nowrap bg-teal-500 text-white font-medium"
                           >
-                            {capitalizeWords(matchingItem.name)}
+                            {capitalizeWords(focusedItem.trim())}
                           </span>
                         );
                       })}
                     </div>
-                  )}
-                  
-                  {/* Other ingredients */}
-                  {inventoryItems.map((item: any) => {
-                    // Skip items that are already displayed as focused
-                    if (focusIngredient && focusIngredient.split(',').some(ing => 
-                      item.name.toLowerCase() === ing.trim().toLowerCase()
-                    )) {
-                      return null;
-                    }
-                    
-                    return (
-                      <span 
-                        key={item.id}
-                        className="text-xs px-2.5 py-1.5 rounded-full flex-none whitespace-nowrap bg-teal-100 text-teal-800"
-                      >
-                        {capitalizeWords(item.name)}
-                      </span>
-                    );
-                  })}
-                </div>
+                  </div>
+                )}
               </div>
             )}
           </div>
