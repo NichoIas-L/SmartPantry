@@ -118,7 +118,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const message = await anthropic.messages.create({
         model: "claude-3-7-sonnet-20250219", // the newest Anthropic model is "claude-3-7-sonnet-20250219" which was released February 24, 2025
         max_tokens: 1000,
-        system: "You are a food recognition system. You will receive an image of a fridge or cabinet contents. Identify individual food items in the image. Return ONLY a JSON array of objects with format [{name: string, confidence: number}]. Confidence should be 1-100 based on how certain you are. Do not include any explanation or notes.",
+        system: "You are a food recognition system. You will receive an image of a fridge or cabinet contents. Identify individual food items in the image and estimate their quantities when possible. Return ONLY a JSON array of objects with format [{name: string, confidence: number, quantity: string, unit: string}]. Confidence should be 1-100 based on how certain you are. Quantity should be a number as string. Unit should be the appropriate measurement unit or empty if not applicable. Do not include any explanation or notes.",
         messages: [
           {
             role: "user",
@@ -133,7 +133,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               },
               {
                 type: "text",
-                text: "Identify all visible food items in this image. Return ONLY a JSON array of objects."
+                text: "Identify all visible food items in this image, including quantities where possible. For example: 6 eggs, 1 gallon of milk, 2 lbs of apples. Return ONLY a JSON array of objects with name, confidence, quantity, and unit fields."
               }
             ]
           }
@@ -160,10 +160,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         const recognizedItems = JSON.parse(jsonMatch[0]);
         
-        // Ensure names are lowercase for consistency
+        // Ensure names are lowercase for consistency and add default quantity/unit if missing
         const processedItems = recognizedItems.map((item: any) => ({
           ...item,
-          name: item.name.toLowerCase()
+          name: item.name.toLowerCase(),
+          quantity: item.quantity || "1",
+          unit: item.unit || ""
         }));
         
         console.log(`Claude recognized ${processedItems.length} items`);
@@ -176,7 +178,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const fallbackItems = [
           {
             name: "unidentified item",
-            confidence: 50
+            confidence: 50,
+            quantity: "1",
+            unit: ""
           }
         ];
         
@@ -200,7 +204,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Get all inventory items for additional context
       const allInventoryItems = await storage.getInventoryItems();
-      const allIngredientNames = allInventoryItems.map(item => item.name.toLowerCase());
+      
+      // Create a detailed inventory list with quantities
+      const detailedInventory = allInventoryItems.map(item => {
+        const quantityStr = item.quantity ? `${item.quantity} ${item.unit || ''}`.trim() : '1';
+        return `${item.name.toLowerCase()} (${quantityStr})`;
+      });
       
       console.log("Processing recipe suggestion request with Claude AI");
       
@@ -208,22 +217,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const message = await anthropic.messages.create({
         model: "claude-3-7-sonnet-20250219", // the newest Anthropic model is "claude-3-7-sonnet-20250219" which was released February 24, 2025
         max_tokens: 4000,
-        system: "You are a cooking assistant that specializes in creating recipes from available ingredients ONLY. Never suggest ingredients that aren't in the user's inventory.",
+        system: "You are a cooking assistant that specializes in creating recipes from available ingredients ONLY. You need to respect ingredient quantities when suggesting recipes. Never suggest ingredients that aren't in the user's inventory, and never suggest using more of an ingredient than the user has available.",
         messages: [
           {
             role: "user",
             content: [
               {
                 type: "text",
-                text: `I have ONLY these ingredients in my inventory: ${allIngredientNames.join(", ")}.
+                text: `I have ONLY these ingredients in my inventory (with quantities): ${detailedInventory.join(", ")}.
                 
-                Please suggest 3 recipes I could make using ONLY these ingredients. Do not suggest any ingredients that aren't in my inventory list above. Keep recipes simple and practical.
+                Please suggest 3 recipes I could make using ONLY these ingredients and respecting the quantities I have available. Do not suggest any ingredients that aren't in my inventory list above, and do not suggest using more of an ingredient than I have. Keep recipes simple and practical.
                 
                 Return your response as a valid JSON array of recipe objects with these properties:
                 - id: a unique string (use uuid-like format)
                 - title: recipe name
                 - description: brief description (1-2 sentences)
-                - ingredients: array of all ingredients needed (include quantities, but ONLY using items from my inventory)
+                - ingredients: array of ingredient amounts needed (include specific quantities, but ONLY using items from my inventory and respecting my available amounts)
                 - usedInventoryItems: array of ingredient names that match my inventory items
                 - cookTime: cooking time as a string (e.g. "30 min")
                 - calories: approximate calories as a number

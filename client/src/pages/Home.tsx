@@ -91,10 +91,52 @@ export default function Home({ onStartNewSession }: HomeProps) {
         description: "The item has been removed from your inventory",
         variant: "default",
       });
+      
+      // Invalidate inventory query to refresh data
+      const queryClient = (window as any).__REACT_QUERY_DEVTOOLS_GLOBAL_HOOK__?.getClientState();
+      if (queryClient) {
+        queryClient.invalidateQueries({ queryKey: ['/api/inventory', filterLocation] });
+      }
     } catch (error) {
       toast({
         title: "Error",
         description: "Failed to remove item from inventory",
+        variant: "destructive",
+      });
+    }
+  };
+  
+  // Handle edit item
+  const handleEditItem = async (id: number, updates: { quantity?: string, unit?: string }) => {
+    try {
+      const response = await fetch(`/api/inventory/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(updates),
+        credentials: 'include'
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to update item');
+      }
+      
+      toast({
+        title: "Item updated",
+        description: "The item has been updated in your inventory",
+        variant: "default",
+      });
+      
+      // Invalidate inventory query to refresh data
+      const queryClient = (window as any).__REACT_QUERY_DEVTOOLS_GLOBAL_HOOK__?.getClientState();
+      if (queryClient) {
+        queryClient.invalidateQueries({ queryKey: ['/api/inventory', filterLocation] });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update item",
         variant: "destructive",
       });
     }
@@ -333,6 +375,7 @@ export default function Home({ onStartNewSession }: HomeProps) {
                   key={item.id}
                   item={item}
                   onDelete={() => handleDeleteItem(item.id)}
+                  onEdit={(id, updates) => handleEditItem(id, updates)}
                 />
               ))}
             </div>

@@ -7,8 +7,9 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { addItemsToInventory } from '@/lib/imageRecognition';
 import { Plus, Camera } from 'lucide-react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { queryClient } from '@/lib/queryClient';
 import { capitalizeWords } from '@/lib/utils';
 
@@ -32,31 +33,35 @@ export default function Results({
   const [items, setItems] = useState<any[]>(recognizedItems);
   const [isAddingManually, setIsAddingManually] = useState(false);
   const [newItemName, setNewItemName] = useState('');
+  const [newItemQuantity, setNewItemQuantity] = useState('1');
+  const [newItemUnit, setNewItemUnit] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleRemoveItem = (index: number) => {
     setItems(items.filter((_, i) => i !== index));
   };
 
-  const handleEditItem = (index: number, updatedName: string) => {
+  const handleEditItem = (index: number, updatedItem: { name: string, quantity: string, unit: string }) => {
     setItems(items.map((item, i) => (
-      i === index ? { ...item, name: updatedName } : item
+      i === index ? { ...item, ...updatedItem } : item
     )));
   };
 
   const handleAddManually = () => {
     if (!newItemName.trim()) return;
     
-    // Create a new item
+    // Create a new item with quantity and unit
     const newItem = {
       name: newItemName.toLowerCase(),
       confidence: 100,
-      // No longer needed as we've removed images
-      // imageUrl: `https://source.unsplash.com/100x100/?${encodeURIComponent(newItemName.toLowerCase())}`
+      quantity: newItemQuantity,
+      unit: newItemUnit
     };
     
     setItems([...items, newItem]);
     setNewItemName('');
+    setNewItemQuantity('1');
+    setNewItemUnit('');
     setIsAddingManually(false);
   };
 
@@ -138,7 +143,7 @@ export default function Results({
                   key={`${item.name}-${index}`}
                   item={item}
                   onRemove={() => handleRemoveItem(index)}
-                  onEdit={(newName) => handleEditItem(index, newName)}
+                  onEdit={(updatedItem) => handleEditItem(index, updatedItem)}
                 />
               ))}
             </div>
@@ -198,19 +203,55 @@ export default function Results({
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Add Item Manually</DialogTitle>
+            <DialogDescription>
+              Enter item name, quantity, and optional unit of measurement
+            </DialogDescription>
           </DialogHeader>
-          <div className="py-4">
-            <Input
-              placeholder="Item name (e.g. Milk, Apples, Rice)"
-              value={newItemName}
-              onChange={(e) => setNewItemName(e.target.value)}
-              className="w-full"
-            />
+          <div className="py-4 space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="new-item-name">Item Name</Label>
+              <Input
+                id="new-item-name"
+                placeholder="e.g. Milk, Apples, Rice"
+                value={newItemName}
+                onChange={(e) => setNewItemName(e.target.value)}
+                className="w-full"
+              />
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="new-quantity">Quantity</Label>
+                <Input
+                  id="new-quantity"
+                  type="text"
+                  inputMode="decimal"
+                  value={newItemQuantity}
+                  onChange={(e) => setNewItemQuantity(e.target.value)}
+                  className="w-full"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="new-unit">Unit</Label>
+                <Input
+                  id="new-unit"
+                  placeholder="e.g., lbs, oz, pieces"
+                  value={newItemUnit}
+                  onChange={(e) => setNewItemUnit(e.target.value)}
+                  className="w-full"
+                />
+              </div>
+            </div>
           </div>
           <DialogFooter>
             <Button 
               variant="outline" 
-              onClick={() => setIsAddingManually(false)}
+              onClick={() => {
+                setNewItemName('');
+                setNewItemQuantity('1');
+                setNewItemUnit('');
+                setIsAddingManually(false);
+              }}
             >
               Cancel
             </Button>

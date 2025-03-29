@@ -13,6 +13,8 @@ export const inventoryItems = pgTable("inventory_items", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
   location: text("location", { enum: ["Fridge", "Cabinet"] }).notNull(),
+  quantity: text("quantity").default("1"),
+  unit: text("unit").default(""),
   imageUrl: text("image_url"),
   confidence: integer("confidence"), // confidence level from vision API (0-100)
   addedDate: timestamp("added_date").notNull().defaultNow(),
