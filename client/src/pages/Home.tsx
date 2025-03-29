@@ -7,7 +7,6 @@ import { Heart, Clock, ChevronRight, ShoppingCart, ChefHat } from "lucide-react"
 
 import InventoryItem from "@/components/InventoryItem";
 import Navigation from "@/components/Navigation";
-import FloatingActionButton from "@/components/FloatingActionButton";
 import { Button } from "@/components/ui/button";
 import { capitalizeWords } from "@/lib/utils";
 
@@ -132,9 +131,11 @@ export default function Home({ onStartNewSession }: HomeProps) {
             {featuredRecipes.map((recipe) => (
               <div 
                 key={recipe.id} 
-                className="flex-shrink-0 w-64 h-36 bg-teal-400 rounded-xl relative overflow-hidden"
+                className="flex-shrink-0 w-64 h-36 bg-teal-400 rounded-xl relative overflow-hidden shadow-sm"
+                onClick={() => navigate('/recipes')}
+                style={{ cursor: 'pointer' }}
               >
-                <div className="absolute inset-0 pattern-dots-lg text-white/20"></div>
+                <div className="absolute inset-0 bg-[radial-gradient(#ffffff33_1px,transparent_1px)] bg-[length:10px_10px]"></div>
                 <div className="absolute bottom-0 left-0 right-0 p-3 text-white">
                   <h3 className="font-medium text-sm leading-tight mb-2">{recipe.title}</h3>
                   <div className="flex items-center justify-between">
@@ -166,25 +167,46 @@ export default function Home({ onStartNewSession }: HomeProps) {
               See All
             </Button>
           </div>
-          <div className="flex gap-3">
-            <Button 
+          <div className="grid grid-cols-3 gap-3">
+            <div 
+              className="flex flex-col items-center p-4 bg-white rounded-xl shadow-sm"
               onClick={() => handleFilterChange(null)}
-              className="flex-1 rounded-full bg-teal-400 hover:bg-teal-500 text-white"
+              style={{ cursor: 'pointer' }}
             >
-              All Items
-            </Button>
-            <Button 
+              <div className="h-14 w-14 rounded-full bg-teal-100 flex items-center justify-center mb-2">
+                <ShoppingCart className="h-6 w-6 text-teal-500" />
+              </div>
+              <span className="text-sm font-medium">All Items</span>
+            </div>
+            <div 
+              className="flex flex-col items-center p-4 bg-white rounded-xl shadow-sm"
               onClick={() => handleFilterChange("Fridge")}
-              className="flex-1 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-700"
+              style={{ cursor: 'pointer' }}
             >
-              Fridge
-            </Button>
-            <Button 
+              <div className="h-14 w-14 rounded-full bg-blue-100 flex items-center justify-center mb-2">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7 text-blue-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="4" y="2" width="16" height="20" rx="2" />
+                  <line x1="4" y1="10" x2="20" y2="10" />
+                </svg>
+              </div>
+              <span className="text-sm font-medium">Fridge</span>
+            </div>
+            <div 
+              className="flex flex-col items-center p-4 bg-white rounded-xl shadow-sm"
               onClick={() => handleFilterChange("Cabinet")}
-              className="flex-1 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-700"
+              style={{ cursor: 'pointer' }}
             >
-              Cabinet
-            </Button>
+              <div className="h-14 w-14 rounded-full bg-amber-100 flex items-center justify-center mb-2">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7 text-amber-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="3" y="3" width="18" height="18" rx="2" />
+                  <line x1="3" y1="9" x2="21" y2="9" />
+                  <line x1="3" y1="15" x2="21" y2="15" />
+                  <line x1="9" y1="9" x2="9" y2="21" />
+                  <line x1="15" y1="9" x2="15" y2="21" />
+                </svg>
+              </div>
+              <span className="text-sm font-medium">Cabinet</span>
+            </div>
           </div>
         </section>
 
@@ -202,7 +224,10 @@ export default function Home({ onStartNewSession }: HomeProps) {
           </div>
           
           {pastRecipes.length === 0 ? (
-            <div className="bg-white rounded-xl p-8 text-center shadow-sm">
+            <div className="bg-white rounded-xl p-6 text-center shadow-sm">
+              <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-4">
+                <ChefHat className="h-8 w-8 text-gray-400" />
+              </div>
               <p className="text-gray-500 mb-4">You haven't saved any recipes yet</p>
               <Button 
                 className="bg-teal-500 hover:bg-teal-600"
@@ -214,8 +239,13 @@ export default function Home({ onStartNewSession }: HomeProps) {
           ) : (
             <div className="grid grid-cols-2 gap-4">
               {pastRecipes.map((recipe) => (
-                <div key={recipe.id} className="bg-white rounded-xl overflow-hidden shadow-sm">
-                  <div className="h-32 bg-gray-200 relative">
+                <div 
+                  key={recipe.id} 
+                  className="bg-white rounded-xl overflow-hidden shadow-sm"
+                  onClick={() => navigate('/recipes')}
+                  style={{ cursor: 'pointer' }}
+                >
+                  <div className="aspect-square bg-gray-200 relative">
                     {recipe.image && (
                       <img 
                         src={recipe.image} 
@@ -223,9 +253,9 @@ export default function Home({ onStartNewSession }: HomeProps) {
                         className="w-full h-full object-cover"
                       />
                     )}
-                    <button className="absolute top-2 right-2 bg-white rounded-full p-1.5">
+                    <div className="absolute top-2 right-2 bg-white/80 backdrop-blur-sm rounded-full p-1.5">
                       <Heart className="h-4 w-4 text-gray-500" />
-                    </button>
+                    </div>
                   </div>
                   <div className="p-3">
                     <h3 className="font-medium text-sm line-clamp-2 mb-2">{recipe.title}</h3>
@@ -250,32 +280,40 @@ export default function Home({ onStartNewSession }: HomeProps) {
         </section>
       </div>
 
-      {/* Floating Action Buttons */}
-      <div className="fixed bottom-16 inset-x-0 flex justify-center z-20">
+      {/* Primary Action Button */}
+      <div className="fixed bottom-20 right-5 z-20">
         <Button
-          className="rounded-full h-14 w-14 bg-gray-900 hover:bg-gray-800 shadow-lg flex items-center justify-center"
+          className="rounded-full h-16 w-16 bg-teal-500 hover:bg-teal-600 shadow-lg flex items-center justify-center"
+          onClick={() => {
+            if (onStartNewSession) {
+              onStartNewSession();
+            }
+            navigate('/camera');
+          }}
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+            <circle cx="12" cy="13" r="4"></circle>
+          </svg>
+        </Button>
+      </div>
+      
+      {/* Secondary Action Button */}
+      <div className="fixed bottom-20 right-24 z-10">
+        <Button
+          className="rounded-full h-14 w-14 bg-gray-800 hover:bg-gray-700 shadow-md flex items-center justify-center"
           onClick={() => navigate('/recipes')}
         >
           <ChefHat className="h-6 w-6 text-white" />
         </Button>
       </div>
-      
-      {/* Camera Button */}
-      <FloatingActionButton
-        onClick={() => {
-          if (onStartNewSession) {
-            onStartNewSession();
-          }
-          navigate('/camera');
-        }}
-      />
 
       {/* Inventory Dialog */}
       <Dialog open={showInventoryDialog} onOpenChange={setShowInventoryDialog}>
-        <DialogContent className="max-w-md">
-          <h2 className="text-xl font-semibold mb-4">
+        <DialogContent className="max-w-md" aria-labelledby="dialog-title">
+          <div className="text-xl font-semibold mb-4" id="dialog-title">
             {filterLocation ? `${filterLocation} Items` : 'All Items'}
-          </h2>
+          </div>
           
           {isLoading ? (
             <div className="flex flex-col gap-4">
