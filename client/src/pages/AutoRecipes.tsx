@@ -159,40 +159,65 @@ export default function AutoRecipes() {
           </p>
         </header>
 
-        {/* Inventory summary */}
+        {/* Inventory summary - improved scrollable design */}
         <section className="px-5 mb-4">
           <div className="bg-white rounded-xl p-4 shadow-sm">
-            <h2 className="text-base font-medium mb-2">Your Ingredients</h2>
-            <div className="flex flex-wrap gap-1.5">
-              {isLoading ? (
-                <div className="w-full h-6 bg-gray-200 animate-pulse rounded"></div>
-              ) : inventoryItems.length === 0 ? (
-                <p className="text-sm text-gray-500">No items in your inventory</p>
-              ) : (
-                inventoryItems.slice(0, 8).map((item: any, index: number) => (
-                  <span 
-                    key={item.id}
-                    className={`text-xs px-2 py-1 rounded-full ${
-                      focusIngredient && (
-                        // Check if this item is included in our comma-separated focus ingredients
-                        focusIngredient.split(',').some(ing => 
-                          item.name.toLowerCase() === ing.trim().toLowerCase()
-                        )
-                      )
-                        ? 'bg-teal-500 text-white font-medium'
-                        : 'bg-teal-100 text-teal-800'
-                    }`}
-                  >
-                    {capitalizeWords(item.name)}
-                  </span>
-                ))
-              )}
-              {inventoryItems.length > 8 && (
-                <span className="text-xs px-2 py-1 rounded-full bg-gray-100 text-gray-700">
-                  +{inventoryItems.length - 8} more
-                </span>
-              )}
+            <div className="flex items-center justify-between mb-2">
+              <h2 className="text-base font-medium">Your Ingredients</h2>
+              <span className="text-xs text-gray-500 px-2 py-0.5 bg-gray-100 rounded-full">
+                {inventoryItems.length} items
+              </span>
             </div>
+            
+            {isLoading ? (
+              <div className="w-full h-6 bg-gray-200 animate-pulse rounded"></div>
+            ) : inventoryItems.length === 0 ? (
+              <p className="text-sm text-gray-500">No items in your inventory</p>
+            ) : (
+              <div className="overflow-x-auto -mx-1 px-1 pb-1">
+                <div className="flex gap-1.5 flex-nowrap min-w-0">
+                  {/* Focused ingredients first */}
+                  {focusIngredient && (
+                    <div className="flex-none pr-2 border-r border-gray-100 mr-2">
+                      {focusIngredient.split(',').map((focusedItem, idx) => {
+                        const matchingItem = inventoryItems.find((item: any) => 
+                          item.name.toLowerCase() === focusedItem.trim().toLowerCase()
+                        );
+                        if (!matchingItem) return null;
+                        
+                        return (
+                          <span 
+                            key={`focus-${idx}`}
+                            className="text-xs px-2.5 py-1.5 rounded-full mr-1.5 whitespace-nowrap bg-teal-500 text-white font-medium"
+                          >
+                            {capitalizeWords(matchingItem.name)}
+                          </span>
+                        );
+                      })}
+                    </div>
+                  )}
+                  
+                  {/* Other ingredients */}
+                  {inventoryItems.map((item: any) => {
+                    // Skip items that are already displayed as focused
+                    if (focusIngredient && focusIngredient.split(',').some(ing => 
+                      item.name.toLowerCase() === ing.trim().toLowerCase()
+                    )) {
+                      return null;
+                    }
+                    
+                    return (
+                      <span 
+                        key={item.id}
+                        className="text-xs px-2.5 py-1.5 rounded-full flex-none whitespace-nowrap bg-teal-100 text-teal-800"
+                      >
+                        {capitalizeWords(item.name)}
+                      </span>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </div>
         </section>
 
@@ -317,20 +342,40 @@ export default function AutoRecipes() {
                     
                     <div className="mb-4">
                       <h4 className="text-sm font-medium mb-2">Ingredients:</h4>
-                      <div className="flex flex-wrap gap-1.5">
-                        {recipe.ingredients.map((ingredient, i) => (
-                          <span 
-                            key={i} 
-                            className={`text-xs px-2 py-1 rounded-full ${
-                              recipe.usedInventoryItems.some(item => 
-                                ingredient.toLowerCase().includes(item.toLowerCase()))
-                                ? 'bg-teal-100 text-teal-800' 
-                                : 'bg-gray-100 text-gray-800'
-                            }`}
-                          >
-                            {ingredient}
-                          </span>
-                        ))}
+                      <div className="flex flex-col gap-1.5">
+                        {recipe.ingredients.map((ingredient, i) => {
+                          // Check if this is a focused ingredient
+                          const isFocusedIngredient = focusIngredient && 
+                            focusIngredient.split(',').some(focusItem => 
+                              ingredient.toLowerCase().includes(focusItem.trim().toLowerCase())
+                            );
+                          
+                          // Check if this is a standard inventory item  
+                          const isInventoryItem = recipe.usedInventoryItems.some(item => 
+                            ingredient.toLowerCase().includes(item.toLowerCase())
+                          );
+                          
+                          return (
+                            <div 
+                              key={i} 
+                              className={`text-xs px-3 py-2 rounded-lg flex items-center ${
+                                isFocusedIngredient
+                                  ? 'bg-teal-500 text-white' 
+                                  : isInventoryItem
+                                    ? 'bg-teal-100 text-teal-800' 
+                                    : 'bg-gray-100 text-gray-800'
+                              }`}
+                            >
+                              <div className="w-1.5 h-1.5 rounded-full mr-2 bg-current opacity-70"></div>
+                              {ingredient}
+                              {isFocusedIngredient && (
+                                <span className="ml-auto text-[10px] bg-white/20 px-1.5 py-0.5 rounded-full">
+                                  Featured
+                                </span>
+                              )}
+                            </div>
+                          );
+                        })}
                       </div>
                     </div>
                     

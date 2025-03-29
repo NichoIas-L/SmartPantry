@@ -71,10 +71,10 @@ export default function RecipePrompt() {
   
   return (
     <>
-      <div className="flex-1 overflow-y-auto pb-20 bg-gradient-to-b from-teal-50 to-white">
-        {/* Header with gradient background */}
-        <header className="px-5 pt-6 pb-4 bg-gradient-to-r from-teal-500 to-teal-600 text-white rounded-b-2xl shadow-sm mb-6">
-          <div className="flex items-center mb-4">
+      <div className="flex-1 overflow-y-auto pb-28 bg-gradient-to-b from-teal-50 to-white">
+        {/* Fixed Header with gradient background */}
+        <header className="sticky top-0 z-10 px-5 pt-5 pb-4 bg-gradient-to-r from-teal-500 to-teal-600 text-white rounded-b-xl shadow-sm mb-5">
+          <div className="flex items-center mb-3">
             <Button 
               variant="ghost" 
               size="icon" 
@@ -85,12 +85,12 @@ export default function RecipePrompt() {
             </Button>
             <h1 className="text-xl font-bold">Create Your Recipe</h1>
           </div>
-          <p className="text-white/90 text-sm mb-6">
+          <p className="text-white/90 text-sm mb-4">
             Select the ingredients you'd like to feature in your recipes
           </p>
           
           {/* Search with enhanced styling */}
-          <div className="relative mb-2">
+          <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
             <Input
               type="text"
@@ -104,13 +104,13 @@ export default function RecipePrompt() {
         
         {/* Selected ingredients badges */}
         {selectedIngredients.length > 0 && (
-          <div className="px-5 mb-4">
+          <div className="px-5 mb-4 sticky top-[105px] z-10 bg-gradient-to-b from-teal-50 to-teal-50/90 pt-2 pb-3">
             <div className="flex justify-between items-center mb-2">
-              <h2 className="text-sm font-medium text-gray-700">Selected Ingredients</h2>
+              <h2 className="text-sm font-medium text-gray-700">Selected Ingredients ({selectedIngredients.length})</h2>
               <Button 
                 variant="ghost" 
                 size="sm" 
-                className="h-8 text-xs text-gray-500 hover:text-gray-700"
+                className="h-7 text-xs text-gray-500 hover:text-gray-700"
                 onClick={clearSelections}
               >
                 Clear All
@@ -171,43 +171,65 @@ export default function RecipePrompt() {
           </div>
         )}
         
-        {/* Inventory items grid with cards */}
+        {/* Inventory items grid with cards - better organized by location */}
         {!isLoading && filteredItems.length > 0 && (
           <div className="px-5">
-            <h2 className="text-base font-semibold mb-3 text-gray-800">Your Inventory</h2>
-            <div className="grid grid-cols-2 gap-3">
-              {filteredItems.map((item: any) => {
-                const isSelected = selectedIngredients.includes(item.name.toLowerCase());
+            {/* Group items by location */}
+            {(() => {
+              // Get unique locations from filtered items
+              const locationSet = new Set<string>();
+              filteredItems.forEach(item => locationSet.add(item.location));
+              const locations = Array.from(locationSet);
+              
+              return locations.map(location => {
+                const locationItems = filteredItems.filter(item => item.location === location);
                 return (
-                  <div 
-                    key={item.id}
-                    className={`bg-white p-3 rounded-xl shadow-sm border-2 transition-all ${
-                      isSelected ? 'border-teal-500 bg-teal-50' : 'border-transparent hover:border-gray-200'
-                    } cursor-pointer`}
-                    onClick={() => toggleIngredientSelection(item.name.toLowerCase())}
-                  >
-                    <div className="flex items-start">
-                      <div className="flex-1">
-                        <h3 className="font-medium text-sm">{capitalizeWords(item.name)}</h3>
-                        <div className="text-2xs text-gray-500 mt-1">
-                          {item.quantity && (
-                            <span>{item.quantity} {item.unit || ''}</span>
-                          )}
-                        </div>
-                      </div>
-                      {isSelected && (
-                        <div className="h-5 w-5 rounded-full bg-teal-500 flex items-center justify-center text-white">
-                          <Check className="h-3 w-3" />
-                        </div>
-                      )}
+                  <div key={location} className="mb-6">
+                    <div className="flex items-center mb-3">
+                      <h2 className="text-base font-semibold text-gray-800">
+                        {location === "Fridge" ? "Refrigerated Items" : "Pantry Items"}
+                      </h2>
+                      <span className="ml-2 px-2 py-0.5 text-xs text-gray-500 bg-gray-100 rounded-full">
+                        {locationItems.length}
+                      </span>
                     </div>
-                    <div className="text-2xs mt-1 px-1.5 py-0.5 rounded bg-gray-100 text-gray-600 inline-block">
-                      {item.location}
+                    
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                      {locationItems.map((item: any) => {
+                        const isSelected = selectedIngredients.includes(item.name.toLowerCase());
+                        return (
+                          <div 
+                            key={item.id}
+                            className={`bg-white p-3 rounded-xl shadow-sm border transition-all ${
+                              isSelected ? 'border-teal-500 bg-teal-50/60' : 'border-gray-100 hover:border-gray-200'
+                            } cursor-pointer`}
+                            onClick={() => toggleIngredientSelection(item.name.toLowerCase())}
+                          >
+                            <div className="flex items-center justify-between mb-1">
+                              <h3 className="font-medium text-sm line-clamp-1">{capitalizeWords(item.name)}</h3>
+                              {isSelected && (
+                                <div className="h-5 w-5 rounded-full flex-shrink-0 bg-teal-500 flex items-center justify-center text-white">
+                                  <Check className="h-3 w-3" />
+                                </div>
+                              )}
+                            </div>
+                            
+                            <div className="flex items-center text-xs text-gray-500">
+                              <span className="text-teal-600 opacity-70 line-clamp-1">
+                                {item.quantity && `${item.quantity} ${item.unit || ''}`}
+                              </span>
+                              <span className="ml-auto text-[10px] text-gray-400">
+                                {location}
+                              </span>
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                 );
-              })}
-            </div>
+              });
+            })()}
           </div>
         )}
         
