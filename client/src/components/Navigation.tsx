@@ -22,7 +22,7 @@ export default function Navigation({ activePage }: NavigationProps) {
         {/* Middle elevated button */}
         <div className="absolute left-1/2 transform -translate-x-1/2 -top-8">
           <Button
-            onClick={() => navigate('/recipes')}
+            onClick={() => navigate('/recipe-suggestions')}
             className="rounded-full h-16 w-16 bg-gray-900 hover:bg-gray-800 shadow-lg flex items-center justify-center"
           >
             <ChefHat className="h-7 w-7 text-white" />

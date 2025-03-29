@@ -8,6 +8,7 @@ import Camera from "@/pages/Camera";
 import Processing from "@/pages/Processing";
 import Results from "@/pages/Results";
 import Recipes from "@/pages/Recipes";
+import RecipeSuggestions from "@/pages/RecipeSuggestions";
 import { useState } from "react";
 
 function Router() {
@@ -85,6 +86,9 @@ function Router() {
       </Route>
       <Route path="/recipes">
         <Recipes />
+      </Route>
+      <Route path="/recipe-suggestions">
+        <RecipeSuggestions />
       </Route>
       <Route>
         <NotFound />

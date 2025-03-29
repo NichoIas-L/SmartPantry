@@ -189,6 +189,87 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Recipe suggestion endpoint using Claude
+  app.post("/api/recipe-suggestions", async (req: Request, res: Response) => {
+    try {
+      const { ingredients } = req.body;
+      
+      if (!ingredients || !Array.isArray(ingredients) || ingredients.length === 0) {
+        return res.status(400).json({ message: "Ingredients list is required" });
+      }
+
+      // Get all inventory items for additional context
+      const allInventoryItems = await storage.getInventoryItems();
+      const allIngredientNames = allInventoryItems.map(item => item.name.toLowerCase());
+      
+      console.log("Processing recipe suggestion request with Claude AI");
+      
+      // Generate recipe suggestions based on selected ingredients
+      const message = await anthropic.messages.create({
+        model: "claude-3-7-sonnet-20250219", // the newest Anthropic model is "claude-3-7-sonnet-20250219" which was released February 24, 2025
+        max_tokens: 4000,
+        system: "You are a cooking assistant that specializes in creating recipes from available ingredients. When given a list of ingredients, suggest creative and practical recipes.",
+        messages: [
+          {
+            role: "user",
+            content: [
+              {
+                type: "text",
+                text: `I want to make a meal with these specific ingredients: ${ingredients.join(", ")}.
+                
+                I also have these other ingredients in my inventory that I could use: ${allIngredientNames.filter(name => !ingredients.includes(name)).join(", ")}.
+                
+                Please suggest 3 recipes I could make that use as many of my selected ingredients as possible. 
+                
+                Return your response as a valid JSON array of recipe objects with these properties:
+                - id: a unique string (use uuid-like format)
+                - title: recipe name
+                - description: brief description (1-2 sentences)
+                - ingredients: array of all ingredients needed (include quantities)
+                - usedInventoryItems: array of ingredient names that match my selected ingredients
+                - cookTime: cooking time as a string (e.g. "30 min")
+                - calories: approximate calories as a number
+                - image: a URL to a representative image (use urls from unsplash.com)
+                - isFavorite: set to false
+                
+                Return complete, valid JSON without any explanation text.`
+              }
+            ]
+          }
+        ]
+      });
+      
+      console.log("Claude AI recipe suggestions received");
+      
+      try {
+        // Parse the JSON from Claude's response
+        const responseBlock = message.content[0];
+        
+        // Type assertion to handle the response properly
+        const responseText = (responseBlock as any).text as string;
+        
+        // Extract JSON array from the response
+        const jsonMatch = responseText.match(/\[\s*\{[\s\S]*\}\s*\]/);
+        
+        if (!jsonMatch) {
+          console.error("No valid JSON found in Claude response:", responseText);
+          throw new Error("Failed to parse response from Claude");
+        }
+        
+        const suggestedRecipes = JSON.parse(jsonMatch[0]);
+        console.log(`Claude suggested ${suggestedRecipes.length} recipes`);
+        
+        res.json(suggestedRecipes);
+      } catch (parseError) {
+        console.error("Error parsing Claude recipe suggestions:", parseError);
+        res.status(500).json({ message: "Failed to generate recipe suggestions" });
+      }
+    } catch (err) {
+      console.error("Error generating recipe suggestions:", err);
+      res.status(500).json({ message: "Failed to generate recipe suggestions" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
