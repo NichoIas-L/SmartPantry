@@ -16,6 +16,7 @@ export default function Camera({ onImageCaptured, captureCount = 0 }: CameraProp
   const webcamRef = useRef<Webcam>(null);
   const [isCameraReady, setIsCameraReady] = useState(false);
   const [cameraError, setCameraError] = useState<string | null>(null);
+  const [isCapturing, setIsCapturing] = useState(false);
   const { toast } = useToast();
 
   // Handle camera initialization
@@ -35,26 +36,40 @@ export default function Camera({ onImageCaptured, captureCount = 0 }: CameraProp
     setIsCameraReady(false);
   }, []);
 
-  // Capture image from webcam
+  // Capture image from webcam with delay to ensure camera is fully initialized
   const captureImage = useCallback(() => {
-    if (!webcamRef.current) return;
+    if (!webcamRef.current || isCapturing) return;
     
-    const imageSrc = webcamRef.current.getScreenshot();
-    if (!imageSrc) {
-      toast({
-        title: "Error",
-        description: "Failed to capture image. Please try again.",
-        variant: "destructive",
-      });
-      return;
-    }
+    setIsCapturing(true);
     
-    // Pass image data to parent component
-    onImageCaptured(imageSrc);
-    
-    // Navigate to processing page
-    navigate('/processing');
-  }, [webcamRef, navigate, onImageCaptured, toast]);
+    // Add a small delay before capturing to ensure camera is ready
+    setTimeout(() => {
+      if (!webcamRef.current) {
+        setIsCapturing(false);
+        return;
+      }
+      
+      const imageSrc = webcamRef.current.getScreenshot();
+      if (!imageSrc) {
+        toast({
+          title: "Error",
+          description: "Failed to capture image. Please try again.",
+          variant: "destructive",
+        });
+        setIsCapturing(false);
+        return;
+      }
+      
+      console.log("Image captured successfully");
+      
+      // Pass image data to parent component
+      onImageCaptured(imageSrc);
+      
+      // Navigate to processing page
+      navigate('/processing');
+      setIsCapturing(false);
+    }, 300); // 300ms delay to ensure camera is ready
+  }, [webcamRef, navigate, onImageCaptured, toast, isCapturing]);
 
   // Configure webcam
   const videoConstraints = {

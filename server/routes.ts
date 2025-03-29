@@ -106,10 +106,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Image recognition API endpoint using Claude
   app.post("/api/recognize", async (req: Request, res: Response) => {
     try {
-      const { imageBase64 } = req.body;
+      let { imageBase64 } = req.body;
       
       if (!imageBase64) {
         return res.status(400).json({ message: "Image data is required" });
+      }
+      
+      // Ensure we have a properly formatted base64 image string
+      // The Anthropic API expects the base64 data without the data URL prefix
+      let imageData: string;
+      
+      try {
+        // If the incoming data has a data URL prefix, remove it
+        if (typeof imageBase64 === 'string' && imageBase64.includes('base64,')) {
+          imageData = imageBase64.split('base64,')[1];
+        } else {
+          // If it's already just base64 data, use it as is
+          imageData = imageBase64.replace(/^data:image\/\w+;base64,/, "");
+        }
+        
+        // Quick validation check for base64 format
+        if (!/^[A-Za-z0-9+/=]+$/.test(imageData)) {
+          console.warn("Image data doesn't appear to be valid base64");
+          return res.status(400).json({ message: "Invalid image data format" });
+        }
+      } catch (err) {
+        console.error("Error processing image data:", err);
+        return res.status(400).json({ message: "Invalid image data format" });
       }
       
       console.log("Processing image recognition request with Claude AI");
@@ -128,7 +151,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 source: {
                   type: "base64",
                   media_type: "image/jpeg",
-                  data: imageBase64.replace(/^data:image\/\w+;base64,/, "")
+                  data: imageData
                 }
               },
               {

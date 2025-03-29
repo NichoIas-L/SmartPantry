@@ -31,13 +31,27 @@ export default function Processing({
       return;
     }
 
-    // Process image recognition
-    const processImage = async () => {
+    // Process image recognition with retry logic
+    const processImage = async (retries = 1) => {
       try {
+        console.log(`Processing image recognition (attempt ${retries})`);
+        
+        // Verify the image data format before sending
+        if (!imageData.startsWith('data:image/')) {
+          throw new Error('Invalid image data format');
+        }
+        
         // Call API to recognize items in image
         const recognizedItems = await recognizeImage(imageData);
         
         if (recognizedItems.length === 0) {
+          // If no items detected but we have retries left, try again
+          if (retries < 2) {
+            console.log('No items detected, retrying...');
+            setTimeout(() => processImage(retries + 1), 1000);
+            return;
+          }
+          
           toast({
             title: "No items detected",
             description: "We couldn't detect any food items in your image. Please try again with better lighting or a clearer view.",
@@ -53,8 +67,17 @@ export default function Processing({
           return;
         }
         
+        console.log(`Successfully recognized ${recognizedItems.length} items`);
+        
         // Pass recognized items to parent component
         onRecognitionComplete(recognizedItems);
+        
+        // Show success toast
+        toast({
+          title: "Items Recognized",
+          description: `Successfully identified ${recognizedItems.length} items in your fridge.`,
+          duration: 3000,
+        });
         
         // If we have processed all images, go to results
         // Otherwise, go back to camera to take more pictures
@@ -65,9 +88,17 @@ export default function Processing({
         }
       } catch (error) {
         console.error('Image recognition error:', error);
+        
+        // Retry if we have attempts left
+        if (retries < 2) {
+          console.log(`Recognition failed, retrying... (${retries}/2)`);
+          setTimeout(() => processImage(retries + 1), 1000);
+          return;
+        }
+        
         toast({
           title: "Recognition Failed",
-          description: "We couldn't process your image. Please try again.",
+          description: "We couldn't process your image. Please try again with a clearer image.",
           variant: "destructive",
         });
         
@@ -83,7 +114,7 @@ export default function Processing({
     // Start processing after a short delay to show the animation
     const timer = setTimeout(() => {
       processImage();
-    }, 1500);
+    }, 1000);
 
     return () => clearTimeout(timer);
   }, [imageData, navigate, onRecognitionComplete, toast, imageIndex, totalImages]);
