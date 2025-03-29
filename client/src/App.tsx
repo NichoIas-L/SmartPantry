@@ -9,6 +9,7 @@ import Processing from "@/pages/Processing";
 import Results from "@/pages/Results";
 import Recipes from "@/pages/Recipes";
 import RecipeSuggestions from "@/pages/RecipeSuggestions";
+import AutoRecipes from "@/pages/AutoRecipes";
 import { useState } from "react";
 
 function Router() {
@@ -89,6 +90,9 @@ function Router() {
       </Route>
       <Route path="/recipe-suggestions">
         <RecipeSuggestions />
+      </Route>
+      <Route path="/auto-recipes">
+        <AutoRecipes />
       </Route>
       <Route>
         <NotFound />
