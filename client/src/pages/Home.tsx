@@ -297,16 +297,6 @@ export default function Home({ onStartNewSession }: HomeProps) {
           </svg>
         </Button>
       </div>
-      
-      {/* Secondary Action Button */}
-      <div className="fixed bottom-20 right-24 z-10">
-        <Button
-          className="rounded-full h-14 w-14 bg-gray-800 hover:bg-gray-700 shadow-md flex items-center justify-center"
-          onClick={() => navigate('/recipes')}
-        >
-          <ChefHat className="h-6 w-6 text-white" />
-        </Button>
-      </div>
 
       {/* Inventory Dialog */}
       <Dialog open={showInventoryDialog} onOpenChange={setShowInventoryDialog}>
