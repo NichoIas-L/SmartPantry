@@ -4,10 +4,12 @@ import { storage } from "./storage";
 import { insertInventoryItemSchema } from "@shared/schema";
 import { fromZodError } from "zod-validation-error";
 import axios from "axios";
+import Anthropic from '@anthropic-ai/sdk';
 
-// Google Cloud Vision API endpoint
-const VISION_API_URL = "https://vision.googleapis.com/v1/images:annotate";
-const VISION_API_KEY = process.env.GOOGLE_VISION_API_KEY || "";
+// Anthropic API setup for Claude
+const anthropic = new Anthropic({
+  apiKey: process.env.ANTHROPIC_API_KEY,
+});
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // API routes for inventory management
@@ -101,7 +103,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Image recognition API endpoint
+  // Image recognition API endpoint using Claude
   app.post("/api/recognize", async (req: Request, res: Response) => {
     try {
       const { imageBase64 } = req.body;
@@ -110,55 +112,80 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Image data is required" });
       }
       
-      // Mock implementation for development
-      // In a production environment, you would use a real image recognition API
-      // like Google Cloud Vision API, Amazon Rekognition, or similar
+      console.log("Processing image recognition request with Claude AI");
       
-      console.log("Processing image recognition request");
+      // Create prompt for Claude with the image
+      const message = await anthropic.messages.create({
+        model: "claude-3-7-sonnet-20250219", // the newest Anthropic model is "claude-3-7-sonnet-20250219" which was released February 24, 2025
+        max_tokens: 1000,
+        system: "You are a food recognition system. You will receive an image of a fridge or cabinet contents. Identify individual food items in the image. Return ONLY a JSON array of objects with format [{name: string, confidence: number}]. Confidence should be 1-100 based on how certain you are. Do not include any explanation or notes.",
+        messages: [
+          {
+            role: "user",
+            content: [
+              {
+                type: "image",
+                source: {
+                  type: "base64",
+                  media_type: "image/jpeg",
+                  data: imageBase64.replace(/^data:image\/\w+;base64,/, "")
+                }
+              },
+              {
+                type: "text",
+                text: "Identify all visible food items in this image. Return ONLY a JSON array of objects."
+              }
+            ]
+          }
+        ]
+      });
       
-      // Simulate processing delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      console.log("Claude AI response received");
       
-      // Mock recognized items
-      const mockItems = [
-        {
-          name: "Milk",
-          confidence: 92,
-          imageUrl: "https://source.unsplash.com/100x100/?milk"
-        },
-        {
-          name: "Apples",
-          confidence: 88,
-          imageUrl: "https://source.unsplash.com/100x100/?apples"
-        },
-        {
-          name: "Cheese",
-          confidence: 86,
-          imageUrl: "https://source.unsplash.com/100x100/?cheese"
-        },
-        {
-          name: "Eggs",
-          confidence: 95,
-          imageUrl: "https://source.unsplash.com/100x100/?eggs"
-        },
-        {
-          name: "Bread",
-          confidence: 91,
-          imageUrl: "https://source.unsplash.com/100x100/?bread"
+      try {
+        // Parse the JSON from Claude's response
+        const responseBlock = message.content[0];
+        
+        // Type assertion to handle the response properly
+        const responseText = (responseBlock as any).text as string;
+        
+        // Extract JSON array from the response (Claude might include some text)
+        // Using a regex that works with ES2015
+        const jsonMatch = responseText.match(/\[\s*\{[\s\S]*\}\s*\]/);
+        
+        if (!jsonMatch) {
+          console.error("No valid JSON found in Claude response:", responseText);
+          throw new Error("Failed to parse response from Claude");
         }
-      ];
-      
-      // Randomly select 3-5 items from the mock list to simulate variation
-      const numItems = Math.floor(Math.random() * 3) + 3; // 3 to 5 items
-      const selectedItems = [...mockItems]
-        .sort(() => 0.5 - Math.random())
-        .slice(0, numItems);
-      
-      console.log(`Recognized ${selectedItems.length} items`);
-      
-      res.json({ items: selectedItems });
+        
+        const recognizedItems = JSON.parse(jsonMatch[0]);
+        
+        // Add image URLs to each item
+        const itemsWithImages = recognizedItems.map((item: any) => ({
+          ...item,
+          imageUrl: `https://source.unsplash.com/100x100/?${encodeURIComponent(item.name.toLowerCase())}`
+        }));
+        
+        console.log(`Claude recognized ${itemsWithImages.length} items`);
+        
+        res.json({ items: itemsWithImages });
+      } catch (parseError) {
+        console.error("Error parsing Claude response:", parseError);
+        
+        // Fallback to a default response if parsing fails
+        const fallbackItems = [
+          {
+            name: "Unidentified Item",
+            confidence: 50,
+            imageUrl: "https://source.unsplash.com/100x100/?food"
+          }
+        ];
+        
+        console.log("Using fallback items due to parsing error");
+        res.json({ items: fallbackItems });
+      }
     } catch (err) {
-      console.error("Error recognizing image:", err);
+      console.error("Error recognizing image with Claude:", err);
       res.status(500).json({ message: "Failed to analyze image" });
     }
   });

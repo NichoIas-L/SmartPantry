@@ -99,7 +99,7 @@ export default function Processing({
         </div>
         <h3 className="text-xl font-semibold text-gray-800 mt-6">Recognizing Items</h3>
         <p className="text-gray-600 max-w-xs mx-auto mt-2">
-          Our AI is identifying food items in your image. This may take a moment.
+          Our advanced Claude AI is analyzing your photo to identify all the food items. This may take a moment.
         </p>
         
         {totalImages > 1 && (

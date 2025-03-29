@@ -105,7 +105,7 @@ export default function Results({
           <div className="mb-4 flex justify-between items-start">
             <div>
               <h2 className="text-xl font-semibold text-gray-800 mb-2">Identified Items</h2>
-              <p className="text-gray-600">Review and confirm the detected items</p>
+              <p className="text-gray-600">Review and confirm the items detected by Claude AI</p>
             </div>
             {capturedImagesCount > 1 && (
               <div className="bg-primary/10 text-primary px-3 py-1 rounded-full text-sm font-medium">
