@@ -219,7 +219,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Recipe suggestion endpoint using Claude
   app.post("/api/recipe-suggestions", async (req: Request, res: Response) => {
     try {
-      const { ingredients } = req.body;
+      const { ingredients, focusIngredient } = req.body;
       
       if (!ingredients || !Array.isArray(ingredients) || ingredients.length === 0) {
         return res.status(400).json({ message: "Ingredients list is required" });
@@ -236,20 +236,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log("Processing recipe suggestion request with Claude AI");
       
-      // Generate recipe suggestions based on selected ingredients
-      const message = await anthropic.messages.create({
-        model: "claude-3-7-sonnet-20250219", // the newest Anthropic model is "claude-3-7-sonnet-20250219" which was released February 24, 2025
-        max_tokens: 4000,
-        system: "You are a cooking assistant that specializes in creating recipes from available ingredients ONLY. You need to respect ingredient quantities when suggesting recipes. Never suggest ingredients that aren't in the user's inventory, and never suggest using more of an ingredient than the user has available.",
-        messages: [
-          {
-            role: "user",
-            content: [
-              {
-                type: "text",
-                text: `I have ONLY these ingredients in my inventory (with quantities): ${detailedInventory.join(", ")}.
-                
-                Please suggest 3 recipes I could make using ONLY these ingredients and respecting the quantities I have available. Do not suggest any ingredients that aren't in my inventory list above, and do not suggest using more of an ingredient than I have. Keep recipes simple and practical.
+      // Build prompt text based on whether we have a focused ingredient
+      let promptText = `I have ONLY these ingredients in my inventory (with quantities): ${detailedInventory.join(", ")}.`;
+      
+      // If there's a focused ingredient, add a request to include it
+      if (focusIngredient) {
+        promptText += `\n\nPlease suggest 3 recipes that FEATURE "${focusIngredient}" as a main ingredient, using ONLY the ingredients from my inventory list and respecting the quantities I have available.`;
+      } else {
+        promptText += `\n\nPlease suggest 3 recipes I could make using ONLY these ingredients and respecting the quantities I have available.`;
+      }
+      
+      promptText += ` Do not suggest any ingredients that aren't in my inventory list above, and do not suggest using more of an ingredient than I have. Keep recipes simple and practical.
                 
                 Return your response as a valid JSON array of recipe objects with these properties:
                 - id: a unique string (use uuid-like format)
@@ -262,7 +259,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 - image: a URL to a high-quality, appetizing image of the EXACT dish from unsplash.com. Make sure the image URL looks like "https://images.unsplash.com/photo-[ID]?..." and is a real, valid URL to a food image that matches this exact recipe (not a generic food image). The images should be professional food photography that would make someone want to eat this dish.
                 - isFavorite: set to false
                 
-                Return complete, valid JSON without any explanation text.`
+                Return complete, valid JSON without any explanation text.`;
+      
+      // Generate recipe suggestions based on selected ingredients
+      const message = await anthropic.messages.create({
+        model: "claude-3-7-sonnet-20250219", // the newest Anthropic model is "claude-3-7-sonnet-20250219" which was released February 24, 2025
+        max_tokens: 4000,
+        system: "You are a cooking assistant that specializes in creating recipes from available ingredients ONLY. You need to respect ingredient quantities when suggesting recipes. Never suggest ingredients that aren't in the user's inventory, and never suggest using more of an ingredient than the user has available.",
+        messages: [
+          {
+            role: "user",
+            content: [
+              {
+                type: "text",
+                text: promptText
               }
             ]
           }

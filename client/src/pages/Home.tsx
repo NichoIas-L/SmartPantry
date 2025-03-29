@@ -259,7 +259,7 @@ export default function Home({ onStartNewSession }: HomeProps) {
             <Button 
               variant="link" 
               className="text-teal-500 font-medium text-sm px-0 hover:no-underline"
-              onClick={() => navigate('/auto-recipes')}
+              onClick={() => navigate('/recipe-prompt')}
             >
               See All
             </Button>
@@ -278,7 +278,7 @@ export default function Home({ onStartNewSession }: HomeProps) {
                 </p>
                 <Button 
                   className="bg-white text-teal-600 hover:bg-white/90"
-                  onClick={() => navigate('/auto-recipes')}
+                  onClick={() => navigate('/recipe-prompt')}
                 >
                   Generate Recipes
                 </Button>

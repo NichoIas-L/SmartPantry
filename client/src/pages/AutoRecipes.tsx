@@ -20,20 +20,30 @@ interface SuggestedRecipe {
 }
 
 export default function AutoRecipes() {
-  const [, navigate] = useLocation();
+  const [location, navigate] = useLocation();
   const inventory = useInventory();
   const inventoryItems = Array.isArray(inventory.inventoryItems) ? inventory.inventoryItems : [];
   const isLoading = inventory.isLoading;
   const [isGenerating, setIsGenerating] = useState(false);
   const [suggestedRecipes, setSuggestedRecipes] = useState<SuggestedRecipe[]>([]);
+  const [focusIngredient, setFocusIngredient] = useState<string | null>(null);
   const { toast } = useToast();
+  
+  // Extract chosen ingredient from URL if available
+  useEffect(() => {
+    const params = new URLSearchParams(location.split('?')[1]);
+    const ingredient = params.get('ingredient');
+    if (ingredient) {
+      setFocusIngredient(ingredient);
+    }
+  }, [location]);
 
-  // Generate recipes when the page loads or inventory changes
+  // Generate recipes when the page loads, inventory changes, or focus ingredient changes
   useEffect(() => {
     if (!isLoading && inventoryItems.length > 0) {
       generateRecipes();
     }
-  }, [isLoading]);
+  }, [isLoading, focusIngredient]);
 
   // Generate recipe suggestions using ONLY inventory items
   const generateRecipes = async () => {
@@ -52,9 +62,14 @@ export default function AutoRecipes() {
       // Extract all ingredient names from inventory items
       const ingredients = inventoryItems.map((item: any) => item.name.toLowerCase());
       
+      // Create toast message based on focus ingredient
+      const toastMessage = focusIngredient 
+        ? `Finding recipes featuring ${capitalizeWords(focusIngredient)}`
+        : "Generating recipes using ONLY ingredients from your inventory";
+        
       toast({
         title: "Finding recipes",
-        description: "Generating recipes using ONLY ingredients from your inventory",
+        description: toastMessage,
         duration: 4000,
       });
       
@@ -64,7 +79,10 @@ export default function AutoRecipes() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ ingredients }),
+        body: JSON.stringify({ 
+          ingredients,
+          focusIngredient 
+        }),
       });
 
       if (!response.ok) {
@@ -110,7 +128,11 @@ export default function AutoRecipes() {
             >
               <ArrowLeft className="h-6 w-6" />
             </Button>
-            <h1 className="text-xl font-bold">Cook With My Ingredients</h1>
+            <h1 className="text-xl font-bold">
+              {focusIngredient 
+                ? `Recipes with ${capitalizeWords(focusIngredient)}` 
+                : "Cook With My Ingredients"}
+            </h1>
             <div className="ml-auto">
               <Button
                 variant="outline"
@@ -141,7 +163,11 @@ export default function AutoRecipes() {
                 inventoryItems.slice(0, 8).map((item: any, index: number) => (
                   <span 
                     key={item.id}
-                    className="text-xs px-2 py-1 rounded-full bg-teal-100 text-teal-800"
+                    className={`text-xs px-2 py-1 rounded-full ${
+                      focusIngredient && item.name.toLowerCase() === focusIngredient.toLowerCase()
+                        ? 'bg-teal-500 text-white font-medium'
+                        : 'bg-teal-100 text-teal-800'
+                    }`}
                   >
                     {capitalizeWords(item.name)}
                   </span>
@@ -196,8 +222,16 @@ export default function AutoRecipes() {
                 <RefreshCw className="h-4 w-4" />
               </div>
               <div>
-                <h3 className="text-sm font-medium text-teal-800">Inventory-Only Recipes</h3>
-                <p className="text-xs text-teal-700">These recipes use <span className="font-semibold">exclusively</span> ingredients from your inventory, respecting available quantities.</p>
+                <h3 className="text-sm font-medium text-teal-800">
+                  {focusIngredient 
+                    ? `Featuring ${capitalizeWords(focusIngredient)}`
+                    : "Inventory-Only Recipes"}
+                </h3>
+                <p className="text-xs text-teal-700">
+                  {focusIngredient 
+                    ? `These recipes feature ${focusIngredient} and use exclusively ingredients from your inventory.`
+                    : "These recipes use exclusively ingredients from your inventory, respecting available quantities."}
+                </p>
               </div>
             </div>
             
