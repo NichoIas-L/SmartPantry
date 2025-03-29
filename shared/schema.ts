@@ -20,10 +20,14 @@ export const inventoryItems = pgTable("inventory_items", {
 });
 
 // Create insert schema for validation
-export const insertInventoryItemSchema = createInsertSchema(inventoryItems).omit({
-  id: true,
-  addedDate: true,
-});
+export const insertInventoryItemSchema = createInsertSchema(inventoryItems)
+  .omit({
+    id: true,
+    addedDate: true,
+  })
+  .extend({
+    expiryDate: z.string().optional().transform(val => val ? new Date(val) : undefined),
+  });
 
 // Export types
 export type InsertInventoryItem = z.infer<typeof insertInventoryItemSchema>;

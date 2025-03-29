@@ -12,7 +12,11 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { AlertCircle } from "lucide-react";
 
-export default function Home() {
+interface HomeProps {
+  onStartNewSession?: () => void;
+}
+
+export default function Home({ onStartNewSession }: HomeProps) {
   const [, navigate] = useLocation();
   const [filterLocation, setFilterLocation] = useState<string | null>(null);
   const { toast } = useToast();
@@ -104,7 +108,12 @@ export default function Home() {
               <h3 className="text-lg font-medium text-gray-900 mb-1">Your inventory is empty</h3>
               <p className="text-gray-600 mb-6">Take a photo of your fridge or cabinet to get started</p>
               <Button 
-                onClick={() => navigate('/camera')}
+                onClick={() => {
+                  if (onStartNewSession) {
+                    onStartNewSession();
+                  }
+                  navigate('/camera');
+                }}
                 className="bg-primary hover:bg-blue-600"
               >
                 Scan Items Now
@@ -124,7 +133,12 @@ export default function Home() {
         </div>
       </main>
 
-      <FloatingActionButton onClick={() => navigate('/camera')} />
+      <FloatingActionButton onClick={() => {
+        if (onStartNewSession) {
+          onStartNewSession();
+        }
+        navigate('/camera');
+      }} />
       <Navigation activePage="home" />
     </>
   );

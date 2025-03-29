@@ -8,9 +8,10 @@ import { useToast } from '@/hooks/use-toast';
 
 interface CameraProps {
   onImageCaptured: (imageData: string) => void;
+  captureCount?: number;
 }
 
-export default function Camera({ onImageCaptured }: CameraProps) {
+export default function Camera({ onImageCaptured, captureCount = 0 }: CameraProps) {
   const [, navigate] = useLocation();
   const webcamRef = useRef<Webcam>(null);
   const [isCameraReady, setIsCameraReady] = useState(false);
@@ -68,9 +69,16 @@ export default function Camera({ onImageCaptured }: CameraProps) {
       
       <main className="flex-1 overflow-y-auto pb-16">
         <div className="max-w-md mx-auto px-4 py-6 space-y-6">
-          <div className="mb-4">
-            <h2 className="text-xl font-semibold text-gray-800 mb-2">Scan Your Items</h2>
-            <p className="text-gray-600">Point camera at your fridge or cabinet contents</p>
+          <div className="mb-4 flex justify-between items-start">
+            <div>
+              <h2 className="text-xl font-semibold text-gray-800 mb-2">Scan Your Items</h2>
+              <p className="text-gray-600">Point camera at your fridge or cabinet contents</p>
+            </div>
+            {captureCount > 0 && (
+              <div className="bg-primary text-white px-3 py-1 rounded-full text-sm font-medium">
+                {captureCount} {captureCount === 1 ? 'photo' : 'photos'} taken
+              </div>
+            )}
           </div>
 
           <div className="relative bg-black rounded-xl overflow-hidden shadow-lg" style={{ aspectRatio: '4/3' }}>

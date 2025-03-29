@@ -6,9 +6,16 @@ import { recognizeImage } from '@/lib/imageRecognition';
 interface ProcessingProps {
   imageData: string | null;
   onRecognitionComplete: (items: any[]) => void;
+  imageIndex?: number;
+  totalImages?: number;
 }
 
-export default function Processing({ imageData, onRecognitionComplete }: ProcessingProps) {
+export default function Processing({ 
+  imageData, 
+  onRecognitionComplete,
+  imageIndex = 0,
+  totalImages = 1
+}: ProcessingProps) {
   const [, navigate] = useLocation();
   const { toast } = useToast();
 
@@ -36,15 +43,26 @@ export default function Processing({ imageData, onRecognitionComplete }: Process
             description: "We couldn't detect any food items in your image. Please try again with better lighting or a clearer view.",
             variant: "destructive",
           });
-          navigate('/camera');
+          
+          // If this is part of a multi-image session, continue to results with current items
+          if (imageIndex > 0) {
+            navigate('/results');
+          } else {
+            navigate('/camera');
+          }
           return;
         }
         
         // Pass recognized items to parent component
         onRecognitionComplete(recognizedItems);
         
-        // Navigate to results page
-        navigate('/results');
+        // If we have processed all images, go to results
+        // Otherwise, go back to camera to take more pictures
+        if (imageIndex >= totalImages - 1) {
+          navigate('/results');
+        } else {
+          navigate('/camera');
+        }
       } catch (error) {
         console.error('Image recognition error:', error);
         toast({
@@ -52,7 +70,13 @@ export default function Processing({ imageData, onRecognitionComplete }: Process
           description: "We couldn't process your image. Please try again.",
           variant: "destructive",
         });
-        navigate('/camera');
+        
+        // If this is part of a multi-image session, continue to results with current items
+        if (imageIndex > 0) {
+          navigate('/results');
+        } else {
+          navigate('/camera');
+        }
       }
     };
 
@@ -62,7 +86,7 @@ export default function Processing({ imageData, onRecognitionComplete }: Process
     }, 1500);
 
     return () => clearTimeout(timer);
-  }, [imageData, navigate, onRecognitionComplete, toast]);
+  }, [imageData, navigate, onRecognitionComplete, toast, imageIndex, totalImages]);
 
   return (
     <main className="min-h-screen flex items-center justify-center bg-white">
@@ -77,6 +101,20 @@ export default function Processing({ imageData, onRecognitionComplete }: Process
         <p className="text-gray-600 max-w-xs mx-auto mt-2">
           Our AI is identifying food items in your image. This may take a moment.
         </p>
+        
+        {totalImages > 1 && (
+          <div className="mt-6">
+            <div className="bg-gray-100 h-2 rounded-full overflow-hidden w-48 mx-auto">
+              <div 
+                className="bg-primary h-full rounded-full" 
+                style={{ width: `${((imageIndex + 1) / totalImages) * 100}%` }}
+              ></div>
+            </div>
+            <p className="text-sm text-gray-500 mt-2">
+              Processing image {imageIndex + 1} of {totalImages}
+            </p>
+          </div>
+        )}
       </div>
     </main>
   );

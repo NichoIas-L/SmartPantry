@@ -6,7 +6,7 @@ import IdentifiedItem from '@/components/IdentifiedItem';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { addItemsToInventory } from '@/lib/imageRecognition';
-import { Plus } from 'lucide-react';
+import { Plus, Camera } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { queryClient } from '@/lib/queryClient';
@@ -15,12 +15,16 @@ interface ResultsProps {
   recognizedItems: any[];
   selectedLocation: string;
   onLocationChange: (location: string) => void;
+  onTakeMorePhotos?: () => void;
+  capturedImagesCount?: number;
 }
 
 export default function Results({ 
   recognizedItems = [], 
   selectedLocation, 
-  onLocationChange 
+  onLocationChange,
+  onTakeMorePhotos,
+  capturedImagesCount = 1
 }: ResultsProps) {
   const [, navigate] = useLocation();
   const { toast } = useToast();
@@ -98,9 +102,16 @@ export default function Results({
       
       <main className="flex-1 overflow-y-auto pb-16">
         <div className="max-w-md mx-auto px-4 py-6 space-y-6">
-          <div className="mb-4">
-            <h2 className="text-xl font-semibold text-gray-800 mb-2">Identified Items</h2>
-            <p className="text-gray-600">Review and confirm the detected items</p>
+          <div className="mb-4 flex justify-between items-start">
+            <div>
+              <h2 className="text-xl font-semibold text-gray-800 mb-2">Identified Items</h2>
+              <p className="text-gray-600">Review and confirm the detected items</p>
+            </div>
+            {capturedImagesCount > 1 && (
+              <div className="bg-primary/10 text-primary px-3 py-1 rounded-full text-sm font-medium">
+                {capturedImagesCount} photos scanned
+              </div>
+            )}
           </div>
 
           <div className="border border-gray-200 rounded-lg bg-white overflow-hidden">
@@ -142,22 +153,40 @@ export default function Results({
             </div>
           </div>
 
-          <div className="flex space-x-3 mt-4">
-            <Button 
-              variant="outline" 
-              className="flex-1"
-              onClick={() => navigate('/camera')}
-            >
-              Retake
-            </Button>
-            <Button 
-              variant="secondary" 
-              className="flex-1"
-              onClick={handleAddToInventory}
-              disabled={isSubmitting || items.length === 0}
-            >
-              {isSubmitting ? "Adding..." : "Add to Inventory"}
-            </Button>
+          <div className="space-y-3 mt-4">
+            {onTakeMorePhotos && (
+              <Button 
+                variant="outline" 
+                className="w-full"
+                onClick={() => {
+                  if (onTakeMorePhotos) {
+                    onTakeMorePhotos();
+                    navigate('/camera');
+                  }
+                }}
+              >
+                <Camera className="h-4 w-4 mr-2" />
+                Take More Photos
+              </Button>
+            )}
+            
+            <div className="flex space-x-3">
+              <Button 
+                variant="outline" 
+                className="flex-1"
+                onClick={() => navigate('/camera')}
+              >
+                Retake
+              </Button>
+              <Button 
+                variant="secondary" 
+                className="flex-1"
+                onClick={handleAddToInventory}
+                disabled={isSubmitting || items.length === 0}
+              >
+                {isSubmitting ? "Adding..." : "Add to Inventory"}
+              </Button>
+            </div>
           </div>
         </div>
       </main>
