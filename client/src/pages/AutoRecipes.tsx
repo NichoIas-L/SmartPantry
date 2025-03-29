@@ -29,12 +29,21 @@ export default function AutoRecipes() {
   const [focusIngredient, setFocusIngredient] = useState<string | null>(null);
   const { toast } = useToast();
   
-  // Extract chosen ingredient from URL if available
+  // Extract chosen ingredient(s) from URL if available
   useEffect(() => {
     const params = new URLSearchParams(location.split('?')[1]);
-    const ingredient = params.get('ingredient');
-    if (ingredient) {
-      setFocusIngredient(ingredient);
+    const ingredients = params.getAll('ingredient');
+    
+    if (ingredients && ingredients.length > 0) {
+      // If we have multiple ingredients, join them with commas
+      if (ingredients.length > 1) {
+        setFocusIngredient(ingredients.join(','));
+      } else {
+        // Just a single ingredient
+        setFocusIngredient(ingredients[0]);
+      }
+    } else {
+      setFocusIngredient(null);
     }
   }, [location]);
 
@@ -164,7 +173,12 @@ export default function AutoRecipes() {
                   <span 
                     key={item.id}
                     className={`text-xs px-2 py-1 rounded-full ${
-                      focusIngredient && item.name.toLowerCase() === focusIngredient.toLowerCase()
+                      focusIngredient && (
+                        // Check if this item is included in our comma-separated focus ingredients
+                        focusIngredient.split(',').some(ing => 
+                          item.name.toLowerCase() === ing.trim().toLowerCase()
+                        )
+                      )
                         ? 'bg-teal-500 text-white font-medium'
                         : 'bg-teal-100 text-teal-800'
                     }`}
@@ -224,12 +238,40 @@ export default function AutoRecipes() {
               <div>
                 <h3 className="text-sm font-medium text-teal-800">
                   {focusIngredient 
-                    ? `Featuring ${capitalizeWords(focusIngredient)}`
+                    ? (() => {
+                        const ingredients = focusIngredient.split(',');
+                        if (ingredients.length > 1) {
+                          return `Featuring Selected Ingredients`;
+                        } else {
+                          return `Featuring ${capitalizeWords(focusIngredient)}`;
+                        }
+                      })()
                     : "Inventory-Only Recipes"}
                 </h3>
                 <p className="text-xs text-teal-700">
                   {focusIngredient 
-                    ? `These recipes feature ${focusIngredient} and use exclusively ingredients from your inventory.`
+                    ? (() => {
+                        const ingredients = focusIngredient.split(',');
+                        if (ingredients.length > 1) {
+                          // Format multiple ingredients nicely
+                          const formattedIngredients = ingredients.map(ing => 
+                            capitalizeWords(ing.trim())
+                          );
+                          
+                          // Join all but the last ingredient with commas
+                          const firstPart = formattedIngredients.slice(0, -1).join(', ');
+                          // Add the last ingredient with "and"
+                          const lastPart = formattedIngredients[formattedIngredients.length - 1];
+                          
+                          const ingredientsList = formattedIngredients.length > 2 
+                            ? `${firstPart}, and ${lastPart}`
+                            : `${firstPart} and ${lastPart}`;
+                            
+                          return `These recipes feature ${ingredientsList} and use exclusively ingredients from your inventory.`;
+                        } else {
+                          return `These recipes feature ${capitalizeWords(focusIngredient)} and use exclusively ingredients from your inventory.`;
+                        }
+                      })()
                     : "These recipes use exclusively ingredients from your inventory, respecting available quantities."}
                 </p>
               </div>

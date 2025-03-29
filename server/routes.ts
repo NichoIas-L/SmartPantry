@@ -236,12 +236,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log("Processing recipe suggestion request with Claude AI");
       
-      // Build prompt text based on whether we have a focused ingredient
+      // Build prompt text based on whether we have focused ingredients
       let promptText = `I have ONLY these ingredients in my inventory (with quantities): ${detailedInventory.join(", ")}.`;
       
-      // If there's a focused ingredient, add a request to include it
+      // If there's a focused ingredient(s), add a request to include it/them
       if (focusIngredient) {
-        promptText += `\n\nPlease suggest 3 recipes that FEATURE "${focusIngredient}" as a main ingredient, using ONLY the ingredients from my inventory list and respecting the quantities I have available.`;
+        // Check if we have multiple ingredients (comma-separated)
+        const focusIngredients = focusIngredient.split(',');
+        
+        if (focusIngredients.length > 1) {
+          // Multiple focus ingredients
+          const formattedIngredients = focusIngredients.map((ing: string) => `"${ing.trim()}"`).join(", ");
+          promptText += `\n\nPlease suggest 3 recipes that FEATURE these ingredients: ${formattedIngredients}. Each recipe should use at least one of these focus ingredients, using ONLY the ingredients from my inventory list and respecting the quantities I have available.`;
+        } else {
+          // Single focus ingredient
+          promptText += `\n\nPlease suggest 3 recipes that FEATURE "${focusIngredient}" as a main ingredient, using ONLY the ingredients from my inventory list and respecting the quantities I have available.`;
+        }
       } else {
         promptText += `\n\nPlease suggest 3 recipes I could make using ONLY these ingredients and respecting the quantities I have available.`;
       }

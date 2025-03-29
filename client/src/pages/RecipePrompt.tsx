@@ -2,11 +2,12 @@ import { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { ArrowLeft, Search } from 'lucide-react';
+import { ArrowLeft, Search, Check, ChefHat, ShoppingBasket } from 'lucide-react';
 import { useInventory } from '@/hooks/useInventory';
 import { useToast } from '@/hooks/use-toast';
 import Navigation from '@/components/Navigation';
 import { capitalizeWords } from '@/lib/utils';
+import { Badge } from '@/components/ui/badge';
 
 export default function RecipePrompt() {
   const [, navigate] = useLocation();
@@ -14,7 +15,7 @@ export default function RecipePrompt() {
   const inventoryItems = Array.isArray(inventory.inventoryItems) ? inventory.inventoryItems : [];
   const isLoading = inventory.isLoading;
   const [searchTerm, setSearchTerm] = useState('');
-  const [chosenIngredient, setChosenIngredient] = useState<string | null>(null);
+  const [selectedIngredients, setSelectedIngredients] = useState<string[]>([]);
   const { toast } = useToast();
   
   // Filter inventory items based on search term
@@ -24,52 +25,112 @@ export default function RecipePrompt() {
       )
     : [];
   
-  // Handle ingredient selection
-  const handleSelectIngredient = (ingredient: string) => {
-    setChosenIngredient(ingredient);
+  // Handle ingredient toggle selection
+  const toggleIngredientSelection = (ingredient: string) => {
+    setSelectedIngredients(prev => {
+      // If ingredient is already selected, remove it
+      if (prev.includes(ingredient)) {
+        return prev.filter(item => item !== ingredient);
+      }
+      // Otherwise, add it to the selected list
+      return [...prev, ingredient];
+    });
+  };
+  
+  // Navigate to recipe generation with selected ingredients
+  const handleGenerateRecipes = () => {
+    if (selectedIngredients.length === 0) {
+      // No ingredients selected, just go to standard recipe page
+      navigate('/auto-recipes');
+      return;
+    }
     
-    // Navigate to the auto-recipes page with the chosen ingredient
-    navigate(`/auto-recipes?ingredient=${encodeURIComponent(ingredient)}`);
+    // Encode multiple ingredients in the URL
+    const queryString = selectedIngredients
+      .map(ingredient => `ingredient=${encodeURIComponent(ingredient)}`)
+      .join('&');
+    
+    // Navigate to the auto-recipes page with the chosen ingredients
+    navigate(`/auto-recipes?${queryString}`);
+    
+    const ingredientText = selectedIngredients.length === 1 
+      ? capitalizeWords(selectedIngredients[0])
+      : `${selectedIngredients.length} ingredients`;
     
     toast({
-      title: `Focusing on ${capitalizeWords(ingredient)}`,
-      description: "Generating recipes that include this ingredient",
+      title: `Focusing on ${ingredientText}`,
+      description: "Generating recipes that feature your selected ingredients",
       duration: 3000,
     });
+  };
+
+  // Clear all selections
+  const clearSelections = () => {
+    setSelectedIngredients([]);
   };
   
   return (
     <>
-      <div className="flex-1 overflow-y-auto pb-20 bg-gray-50">
-        {/* Header */}
-        <header className="px-5 pt-5 pb-3">
+      <div className="flex-1 overflow-y-auto pb-20 bg-gradient-to-b from-teal-50 to-white">
+        {/* Header with gradient background */}
+        <header className="px-5 pt-6 pb-4 bg-gradient-to-r from-teal-500 to-teal-600 text-white rounded-b-2xl shadow-sm mb-6">
           <div className="flex items-center mb-4">
             <Button 
               variant="ghost" 
               size="icon" 
-              className="mr-2 -ml-2" 
+              className="mr-2 -ml-2 text-white hover:bg-white/20" 
               onClick={() => navigate('/')}
             >
               <ArrowLeft className="h-6 w-6" />
             </Button>
-            <h1 className="text-xl font-bold">Choose an Ingredient</h1>
+            <h1 className="text-xl font-bold">Create Your Recipe</h1>
           </div>
-          <p className="text-sm text-gray-500 mb-4">
-            Select an ingredient you'd like to use in your recipes
+          <p className="text-white/90 text-sm mb-6">
+            Select the ingredients you'd like to feature in your recipes
           </p>
           
-          {/* Search */}
-          <div className="relative mb-6">
+          {/* Search with enhanced styling */}
+          <div className="relative mb-2">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
             <Input
               type="text"
               placeholder="Search your inventory..."
-              className="pl-9 pr-4 py-2 bg-white rounded-xl border-none"
+              className="pl-9 pr-4 py-2 bg-white rounded-xl border-none shadow-sm"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
         </header>
+        
+        {/* Selected ingredients badges */}
+        {selectedIngredients.length > 0 && (
+          <div className="px-5 mb-4">
+            <div className="flex justify-between items-center mb-2">
+              <h2 className="text-sm font-medium text-gray-700">Selected Ingredients</h2>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="h-8 text-xs text-gray-500 hover:text-gray-700"
+                onClick={clearSelections}
+              >
+                Clear All
+              </Button>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {selectedIngredients.map((ingredient, idx) => (
+                <Badge 
+                  key={idx} 
+                  variant="outline"
+                  className="px-3 py-1 bg-teal-50 text-teal-700 border-teal-200 hover:bg-teal-100 cursor-pointer"
+                  onClick={() => toggleIngredientSelection(ingredient)}
+                >
+                  {capitalizeWords(ingredient)}
+                  <span className="ml-1.5 text-teal-500">×</span>
+                </Badge>
+              ))}
+            </div>
+          </div>
+        )}
         
         {/* Loading state */}
         {isLoading && (
@@ -85,9 +146,9 @@ export default function RecipePrompt() {
         {/* Empty inventory state */}
         {!isLoading && (!inventoryItems || inventoryItems.length === 0) && (
           <div className="px-5 py-8">
-            <div className="bg-white rounded-xl p-8 text-center">
-              <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-4">
-                <Search className="h-8 w-8 text-gray-400" />
+            <div className="bg-white rounded-xl p-8 text-center shadow-sm">
+              <div className="w-16 h-16 rounded-full bg-teal-50 flex items-center justify-center mx-auto mb-4">
+                <ShoppingBasket className="h-8 w-8 text-teal-500" />
               </div>
               <h2 className="text-lg font-medium mb-2">Your inventory is empty</h2>
               <p className="text-gray-500 mb-4">Add some items to your inventory first</p>
@@ -104,51 +165,62 @@ export default function RecipePrompt() {
         {/* No search results */}
         {!isLoading && inventoryItems && inventoryItems.length > 0 && filteredItems.length === 0 && (
           <div className="px-5 py-8">
-            <div className="bg-white rounded-xl p-6 text-center">
+            <div className="bg-white rounded-xl p-6 text-center shadow-sm">
               <p className="text-gray-500">No matching ingredients found</p>
             </div>
           </div>
         )}
         
-        {/* Inventory items list */}
+        {/* Inventory items grid with cards */}
         {!isLoading && filteredItems.length > 0 && (
           <div className="px-5">
-            <h2 className="text-lg font-semibold mb-3">Your Ingredients</h2>
-            <div className="bg-white rounded-xl overflow-hidden divide-y divide-gray-100">
-              {filteredItems.map((item: any) => (
-                <div 
-                  key={item.id}
-                  className="p-4 flex items-center hover:bg-gray-50 cursor-pointer"
-                  onClick={() => handleSelectIngredient(item.name.toLowerCase())}
-                >
-                  <div className="flex-1">
-                    <h3 className="font-medium">{capitalizeWords(item.name)}</h3>
-                    <div className="flex text-xs text-gray-500 mt-1">
-                      <span className="mr-3">Location: {item.location}</span>
-                      {item.quantity && (
-                        <span>Quantity: {item.quantity} {item.unit || ''}</span>
+            <h2 className="text-base font-semibold mb-3 text-gray-800">Your Inventory</h2>
+            <div className="grid grid-cols-2 gap-3">
+              {filteredItems.map((item: any) => {
+                const isSelected = selectedIngredients.includes(item.name.toLowerCase());
+                return (
+                  <div 
+                    key={item.id}
+                    className={`bg-white p-3 rounded-xl shadow-sm border-2 transition-all ${
+                      isSelected ? 'border-teal-500 bg-teal-50' : 'border-transparent hover:border-gray-200'
+                    } cursor-pointer`}
+                    onClick={() => toggleIngredientSelection(item.name.toLowerCase())}
+                  >
+                    <div className="flex items-start">
+                      <div className="flex-1">
+                        <h3 className="font-medium text-sm">{capitalizeWords(item.name)}</h3>
+                        <div className="text-2xs text-gray-500 mt-1">
+                          {item.quantity && (
+                            <span>{item.quantity} {item.unit || ''}</span>
+                          )}
+                        </div>
+                      </div>
+                      {isSelected && (
+                        <div className="h-5 w-5 rounded-full bg-teal-500 flex items-center justify-center text-white">
+                          <Check className="h-3 w-3" />
+                        </div>
                       )}
                     </div>
+                    <div className="text-2xs mt-1 px-1.5 py-0.5 rounded bg-gray-100 text-gray-600 inline-block">
+                      {item.location}
+                    </div>
                   </div>
-                  <div className="ml-2 text-teal-500">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <polyline points="9 18 15 12 9 6"></polyline>
-                    </svg>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         )}
         
-        {/* Skip option - use all ingredients */}
-        <div className="px-5 mt-6">
+        {/* Generate recipes button (fixed at bottom) */}
+        <div className="fixed bottom-20 inset-x-0 px-5 py-3 bg-gradient-to-t from-white via-white to-transparent">
           <Button
-            variant="outline"
-            className="w-full border-dashed border-teal-300 text-teal-600"
-            onClick={() => navigate('/auto-recipes')}
+            className="w-full bg-teal-500 hover:bg-teal-600 shadow-md py-6 flex items-center justify-center gap-2"
+            onClick={handleGenerateRecipes}
           >
-            Skip – Find recipes using all ingredients
+            <ChefHat className="h-5 w-5" />
+            {selectedIngredients.length > 0 
+              ? `Create Recipes with ${selectedIngredients.length} Selected Ingredients` 
+              : "Create Recipes with All Ingredients"}
           </Button>
         </div>
       </div>
