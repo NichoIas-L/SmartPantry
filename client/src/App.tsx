@@ -11,6 +11,7 @@ import Recipes from "@/pages/Recipes";
 import RecipeSuggestions from "@/pages/RecipeSuggestions";
 import RecipePrompt from "@/pages/RecipePrompt";
 import AutoRecipes from "@/pages/AutoRecipes";
+import CookingInstructions from "@/pages/CookingInstructions";
 import { useState } from "react";
 
 function Router() {
@@ -98,6 +99,9 @@ function Router() {
       </Route>
       <Route path="/auto-recipes">
         <AutoRecipes />
+      </Route>
+      <Route path="/cooking-instructions">
+        <CookingInstructions />
       </Route>
       <Route>
         <NotFound />

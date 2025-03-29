@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useLocation } from "wouter";
 import {
   Dialog,
   DialogContent,
@@ -58,6 +59,7 @@ export default function RecipeDetailsModal({
   const setIsOpen = onOpenChange || setInternalOpen;
   
   const [isFavorite, setIsFavorite] = useState(recipe.isFavorite);
+  const [, navigate] = useLocation();
   
   // Extract nutrition info with defaults
   const nutrition = recipe.nutrition || {
@@ -249,7 +251,33 @@ export default function RecipeDetailsModal({
             <Button variant="outline" className="flex-1" onClick={() => setIsOpen(false)}>
               Close
             </Button>
-            <Button className="flex-1 bg-teal-600 hover:bg-teal-700">
+            <Button 
+              className="flex-1 bg-teal-600 hover:bg-teal-700"
+              onClick={() => {
+                // Close the modal
+                setIsOpen(false);
+                
+                // Create URL parameters with recipe information
+                const params = new URLSearchParams();
+                params.append('recipeId', recipe.id);
+                params.append('title', recipe.title);
+                params.append('image', recipe.image);
+                params.append('description', recipe.description);
+                
+                // Add YouTube video ID if available
+                if (recipe.youtubeVideoId) {
+                  params.append('videoId', recipe.youtubeVideoId);
+                }
+                
+                // Add recipe steps if available
+                if (recipe.steps && recipe.steps.length > 0) {
+                  params.append('steps', encodeURIComponent(JSON.stringify(recipe.steps)));
+                }
+                
+                // Navigate to the cooking instructions page
+                navigate(`/cooking-instructions?${params.toString()}`);
+              }}
+            >
               Start Cooking <ArrowRight className="h-4 w-4 ml-2" />
             </Button>
           </div>
