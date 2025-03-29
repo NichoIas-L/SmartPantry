@@ -17,12 +17,20 @@ export default function Camera({ onImageCaptured, captureCount = 0 }: CameraProp
   const [isCameraReady, setIsCameraReady] = useState(false);
   const [cameraError, setCameraError] = useState<string | null>(null);
   const [isCapturing, setIsCapturing] = useState(false);
+  const [hasInitialized, setHasInitialized] = useState(false);
   const { toast } = useToast();
 
   // Handle camera initialization
   const handleUserMedia = useCallback(() => {
     setIsCameraReady(true);
     setCameraError(null);
+    
+    // Set a timer to ensure the camera is fully initialized before allowing capture
+    // This prevents the first-click issue
+    setTimeout(() => {
+      setHasInitialized(true);
+      console.log("Camera fully initialized and ready for capture");
+    }, 1000);
   }, []);
 
   // Handle camera errors
@@ -34,22 +42,30 @@ export default function Camera({ onImageCaptured, captureCount = 0 }: CameraProp
         : 'Failed to access camera. Please check permissions.'
     );
     setIsCameraReady(false);
+    setHasInitialized(false);
   }, []);
 
   // Capture image from webcam with delay to ensure camera is fully initialized
   const captureImage = useCallback(() => {
+    // First check if the camera has been fully initialized
     if (!webcamRef.current || isCapturing) return;
+    
+    // If camera hasn't completed its initialization process, show a toast and don't proceed
+    if (!hasInitialized) {
+      toast({
+        title: "Camera Initializing",
+        description: "Please wait a moment for the camera to fully initialize.",
+        duration: 3000,
+      });
+      return;
+    }
     
     setIsCapturing(true);
     
-    // Add a small delay before capturing to ensure camera is ready
-    setTimeout(() => {
-      if (!webcamRef.current) {
-        setIsCapturing(false);
-        return;
-      }
-      
+    try {
+      // Get the screenshot directly since we know camera is ready
       const imageSrc = webcamRef.current.getScreenshot();
+      
       if (!imageSrc) {
         toast({
           title: "Error",
@@ -67,14 +83,32 @@ export default function Camera({ onImageCaptured, captureCount = 0 }: CameraProp
       
       // Navigate to processing page
       navigate('/processing');
+    } catch (error) {
+      console.error("Error capturing image:", error);
+      toast({
+        title: "Capture Failed",
+        description: "There was a problem capturing the image. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
       setIsCapturing(false);
-    }, 300); // 300ms delay to ensure camera is ready
-  }, [webcamRef, navigate, onImageCaptured, toast, isCapturing]);
+    }
+  }, [webcamRef, navigate, onImageCaptured, toast, isCapturing, hasInitialized]);
   
   // Continue to processing with the current camera view (without capturing a new image)
   const handleContinue = useCallback(() => {
-    // Only proceed if camera is ready and we're not already capturing
+    // Only proceed if camera is ready and fully initialized
     if (!isCameraReady || isCapturing) return;
+    
+    // If the camera hasn't finished initializing and we need to take a picture, show a message
+    if (!hasInitialized && captureCount === 0) {
+      toast({
+        title: "Camera Initializing",
+        description: "Please wait a moment for the camera to fully initialize.",
+        duration: 3000,
+      });
+      return;
+    }
     
     // If we already have images captured, just go to results
     if (captureCount > 0) {
@@ -83,7 +117,7 @@ export default function Camera({ onImageCaptured, captureCount = 0 }: CameraProp
       // Otherwise, capture an image first
       captureImage();
     }
-  }, [isCameraReady, isCapturing, captureCount, navigate, captureImage]);
+  }, [isCameraReady, isCapturing, captureCount, navigate, captureImage, hasInitialized, toast]);
 
   // Configure webcam
   const videoConstraints = {
@@ -132,12 +166,23 @@ export default function Camera({ onImageCaptured, captureCount = 0 }: CameraProp
                     {/* Scanline animation */}
                     <div className="absolute top-0 left-0 w-full h-[2px] bg-blue-500/50 shadow-[0_0_8px_rgba(59,130,246,0.6)] animate-[scan_2s_infinite]"></div>
                     
+                    {/* Camera initialization status */}
+                    {!hasInitialized && (
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/50">
+                        <div className="text-center">
+                          <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
+                          <p className="text-white text-sm font-medium">Initializing camera...</p>
+                        </div>
+                      </div>
+                    )}
+                    
                     {/* Camera button */}
                     <div className="absolute bottom-4 left-0 right-0 flex justify-center">
                       <Button 
                         onClick={captureImage}
                         size="roundedIcon" 
-                        className="bg-white text-primary shadow-lg p-0"
+                        className={`bg-white text-primary shadow-lg p-0 ${!hasInitialized ? 'opacity-50' : ''}`}
+                        disabled={!hasInitialized}
                       >
                         <div className="bg-primary rounded-full w-12 h-12"></div>
                       </Button>
@@ -176,12 +221,16 @@ export default function Camera({ onImageCaptured, captureCount = 0 }: CameraProp
             </Button>
             <Button 
               onClick={handleContinue}
-              className="flex-1"
-              disabled={!isCameraReady}
+              className={`flex-1 ${!hasInitialized && captureCount === 0 ? 'opacity-80' : ''}`}
+              disabled={!isCameraReady || (!hasInitialized && captureCount === 0)}
             >
-              {isCameraReady 
-                ? (captureCount > 0 ? "Continue to Results" : "Continue") 
-                : "Waiting for camera..."}
+              {!isCameraReady 
+                ? "Waiting for camera..." 
+                : !hasInitialized && captureCount === 0
+                  ? "Initializing..." 
+                  : captureCount > 0 
+                    ? "Continue to Results" 
+                    : "Continue"}
             </Button>
           </div>
         </div>
