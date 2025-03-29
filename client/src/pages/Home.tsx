@@ -252,6 +252,41 @@ export default function Home({ onStartNewSession }: HomeProps) {
           </div>
         </section>
 
+        {/* Cook with My Ingredients section */}
+        <section className="px-5 mb-6">
+          <div className="flex justify-between items-center mb-3">
+            <h2 className="text-xl font-semibold text-gray-900">Cook with My Ingredients</h2>
+            <Button 
+              variant="link" 
+              className="text-teal-500 font-medium text-sm px-0 hover:no-underline"
+              onClick={() => navigate('/auto-recipes')}
+            >
+              See All
+            </Button>
+          </div>
+          
+          <div className="bg-gradient-to-r from-teal-500 to-teal-600 rounded-xl p-5 shadow-sm overflow-hidden relative">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-teal-400 rounded-full -translate-y-1/2 translate-x-1/2 opacity-30" />
+            <div className="flex items-start">
+              <div className="mr-4 bg-white/20 backdrop-blur-sm rounded-full p-3">
+                <ChefHat className="h-6 w-6 text-white" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-white font-semibold text-lg mb-1">Smart Recipe Generator</h3>
+                <p className="text-white/90 text-sm mb-3">
+                  Get recipes made <span className="font-bold underline">exclusively</span> from ingredients in your inventory.
+                </p>
+                <Button 
+                  className="bg-white text-teal-600 hover:bg-white/90"
+                  onClick={() => navigate('/auto-recipes')}
+                >
+                  Generate Recipes
+                </Button>
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* Past Recipes section */}
         <section className="px-5 mb-6">
           <div className="flex justify-between items-center mb-3">

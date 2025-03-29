@@ -21,12 +21,19 @@ export default function Navigation({ activePage }: NavigationProps) {
       <div className="max-w-md mx-auto px-8 relative">
         {/* Middle elevated button */}
         <div className="absolute left-1/2 transform -translate-x-1/2 -top-8">
-          <Button
-            onClick={() => navigate('/auto-recipes')}
-            className="rounded-full h-16 w-16 bg-gray-900 hover:bg-gray-800 shadow-lg flex items-center justify-center"
-          >
-            <ChefHat className="h-7 w-7 text-white" />
-          </Button>
+          <div className="relative group">
+            <Button
+              onClick={() => navigate('/auto-recipes')}
+              className="rounded-full h-16 w-16 bg-gray-900 hover:bg-gray-800 shadow-lg flex items-center justify-center"
+              aria-label="Cook with my ingredients only"
+            >
+              <ChefHat className="h-7 w-7 text-white" />
+            </Button>
+            <div className="absolute opacity-0 group-hover:opacity-100 transition-opacity duration-200 ease-in-out bottom-full left-1/2 transform -translate-x-1/2 mb-2 whitespace-nowrap bg-gray-800 text-white text-sm rounded px-2 py-1 pointer-events-none">
+              <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1/2 rotate-45 w-2 h-2 bg-gray-800"></div>
+              Cook with MY ingredients ONLY
+            </div>
+          </div>
         </div>
         
         <div className="flex justify-between py-5">

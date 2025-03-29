@@ -54,7 +54,8 @@ export default function AutoRecipes() {
       
       toast({
         title: "Finding recipes",
-        description: "Searching for recipes using only your inventory items",
+        description: "Generating recipes using ONLY ingredients from your inventory",
+        duration: 4000,
       });
       
       // Call the backend API
@@ -122,7 +123,9 @@ export default function AutoRecipes() {
               </Button>
             </div>
           </div>
-          <p className="text-sm text-gray-500">Recipes made with only what's in your inventory</p>
+          <p className="text-sm text-gray-500 font-medium">
+            <span className="text-teal-600">✓</span> Recipes use <span className="underline">exclusively</span> what's in your inventory
+          </p>
         </header>
 
         {/* Inventory summary */}
@@ -160,7 +163,7 @@ export default function AutoRecipes() {
               <div className="flex flex-col items-center">
                 <RefreshCw className="h-10 w-10 text-teal-500 animate-spin mb-4" />
                 <h2 className="text-lg font-medium mb-2">Cooking up ideas...</h2>
-                <p className="text-gray-500">Finding the perfect recipes for your ingredients</p>
+                <p className="text-gray-500">Finding recipes using <span className="font-medium">only</span> your available ingredients</p>
               </div>
             </div>
           </section>
@@ -186,6 +189,17 @@ export default function AutoRecipes() {
         {!isGenerating && suggestedRecipes.length > 0 && (
           <section className="px-5 mb-6">
             <h2 className="text-lg font-semibold mb-3">Recipe Suggestions</h2>
+            
+            {/* Inventory-only constraint banner */}
+            <div className="bg-teal-50 border border-teal-200 rounded-lg p-3 mb-4 flex items-start">
+              <div className="bg-teal-500 text-white p-1 rounded-full mr-3 mt-0.5">
+                <RefreshCw className="h-4 w-4" />
+              </div>
+              <div>
+                <h3 className="text-sm font-medium text-teal-800">Inventory-Only Recipes</h3>
+                <p className="text-xs text-teal-700">These recipes use <span className="font-semibold">exclusively</span> ingredients from your inventory, respecting available quantities.</p>
+              </div>
+            </div>
             
             <div className="grid gap-4">
               {suggestedRecipes.map(recipe => (

@@ -81,44 +81,15 @@ export default function RecipeSuggestions() {
       setSuggestedRecipes(result);
     } catch (error) {
       console.error('Error generating recipes:', error);
-      // Fallback to generate recipes client-side using mock data
-      // In a real app, this would be handled by the server
-      simulateRecipeGeneration();
+      
+      toast({
+        title: "Error generating recipes",
+        description: "Couldn't generate recipes. Please try again or select different ingredients.",
+        variant: "destructive"
+      });
     } finally {
       setIsGenerating(false);
     }
-  };
-
-  // This is a fallback function for demo purposes
-  // In a real app, recipe suggestions would come from the server
-  const simulateRecipeGeneration = () => {
-    // Generate some mock recipes based on selected items
-    const mockRecipes: SuggestedRecipe[] = [
-      {
-        id: '1',
-        title: 'Quick Veggie Stir Fry',
-        description: 'A simple and delicious stir fry with vegetables and sauce.',
-        ingredients: [...selectedItems, 'soy sauce', 'garlic', 'vegetable oil'],
-        usedInventoryItems: selectedItems,
-        cookTime: '15 min',
-        calories: 320,
-        image: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=2340&q=80',
-        isFavorite: false
-      },
-      {
-        id: '2',
-        title: 'Simple Garden Salad',
-        description: 'Fresh garden salad with a light vinaigrette dressing.',
-        ingredients: [...selectedItems, 'olive oil', 'vinegar', 'salt', 'pepper'],
-        usedInventoryItems: selectedItems,
-        cookTime: '10 min',
-        calories: 180,
-        image: 'https://images.unsplash.com/photo-1540420773420-3366772f4999?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=2384&q=80',
-        isFavorite: false
-      }
-    ];
-    
-    setSuggestedRecipes(mockRecipes);
   };
 
   // Toggle favorite status of a recipe
@@ -148,6 +119,9 @@ export default function RecipeSuggestions() {
             </Button>
             <h1 className="text-xl font-bold">Recipe Suggestions</h1>
           </div>
+          <p className="text-sm text-gray-500 font-medium mb-3">
+            <span className="text-teal-600">✓</span> Recipes use <span className="underline">only</span> the ingredients you select
+          </p>
           
           {/* Search */}
           <div className="relative mb-4">
@@ -201,7 +175,7 @@ export default function RecipeSuggestions() {
             onClick={generateRecipeSuggestions}
             disabled={selectedItems.length === 0 || isGenerating}
           >
-            {isGenerating ? 'Generating Suggestions...' : 'Find Recipes'}
+            {isGenerating ? 'Generating Suggestions...' : 'Cook with Selected Ingredients Only'}
           </Button>
         </section>
 
@@ -257,6 +231,20 @@ export default function RecipeSuggestions() {
         {suggestedRecipes.length > 0 && (
           <section className="px-5 mb-6">
             <h2 className="text-lg font-semibold mb-3">Suggested Recipes</h2>
+            
+            {/* Inventory-only constraint banner */}
+            <div className="bg-teal-50 border border-teal-200 rounded-lg p-3 mb-4 flex items-start">
+              <div className="bg-teal-500 text-white p-1 rounded-full mr-3 mt-0.5">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                  <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-sm font-medium text-teal-800">Custom-Selected Ingredients Only</h3>
+                <p className="text-xs text-teal-700">These recipes use <span className="font-semibold">only</span> the ingredients you specifically selected.</p>
+              </div>
+            </div>
             
             <div className="grid gap-4">
               {suggestedRecipes.map(recipe => (
