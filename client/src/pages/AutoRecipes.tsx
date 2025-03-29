@@ -5,6 +5,7 @@ import { ArrowLeft, Clock, Heart, RefreshCw } from 'lucide-react';
 import { useInventory } from '@/hooks/useInventory';
 import { useToast } from '@/hooks/use-toast';
 import Navigation from '@/components/Navigation';
+import RecipeDetailsModal from '@/components/RecipeDetailsModal';
 import { capitalizeWords } from '@/lib/utils';
 
 interface SuggestedRecipe {
@@ -27,6 +28,7 @@ export default function AutoRecipes() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [suggestedRecipes, setSuggestedRecipes] = useState<SuggestedRecipe[]>([]);
   const [focusIngredient, setFocusIngredient] = useState<string | null>(null);
+  const [selectedRecipe, setSelectedRecipe] = useState<SuggestedRecipe | null>(null);
   const { toast } = useToast();
   
   // Extract chosen ingredient(s) from URL if available
@@ -381,6 +383,7 @@ export default function AutoRecipes() {
                     
                     <Button
                       className="w-full bg-teal-500 hover:bg-teal-600 shadow-sm"
+                      onClick={() => setSelectedRecipe(recipe)}
                     >
                       View Full Recipe
                     </Button>
@@ -393,6 +396,43 @@ export default function AutoRecipes() {
       </div>
 
       <Navigation activePage="recipes" />
+      
+      {/* Recipe Details Modal */}
+      {selectedRecipe && (
+        <RecipeDetailsModal
+          recipe={{
+            id: selectedRecipe.id,
+            title: selectedRecipe.title,
+            description: selectedRecipe.description,
+            ingredients: selectedRecipe.ingredients,
+            usedInventoryItems: selectedRecipe.usedInventoryItems,
+            cookTime: selectedRecipe.cookTime,
+            calories: selectedRecipe.calories,
+            image: selectedRecipe.image,
+            isFavorite: selectedRecipe.isFavorite,
+            // Adding additional fields that RecipeDetailsModal expects
+            nutrition: {
+              protein: 25,
+              fat: 15,
+              carbs: 35,
+              fiber: 4,
+              sugar: 6,
+              sodium: 400
+            },
+            steps: [
+              "Prepare all ingredients by washing and chopping as needed.",
+              "Heat oil in a large pan over medium heat.",
+              "Add ingredients according to recipe requirements and cook until done.",
+              "Serve hot and enjoy your delicious meal!"
+            ]
+          }}
+          focusIngredient={focusIngredient}
+          open={true}
+          onOpenChange={(open) => {
+            if (!open) setSelectedRecipe(null);
+          }}
+        />
+      )}
     </>
   );
 }
