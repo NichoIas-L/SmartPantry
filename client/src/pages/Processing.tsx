@@ -77,19 +77,46 @@ export default function Processing({
         
         // Automatically add items to inventory
         try {
-          await addItemsToInventory(recognizedItems, selectedLocation);
+          const result = await addItemsToInventory(recognizedItems, selectedLocation);
           
           // Invalidate inventory queries to refresh data
           queryClient.invalidateQueries({ queryKey: ['/api/inventory'] });
           
-          console.log(`Added ${recognizedItems.length} items to ${selectedLocation}`);
-          
-          // Show success toast with added confirmation
-          toast({
-            title: "Items Recognized & Added",
-            description: `Successfully identified and added ${recognizedItems.length} items to your ${selectedLocation.toLowerCase()}.`,
-            duration: 3000,
-          });
+          // Check if we have detailed results with updated vs. new items
+          if (result && typeof result === 'object' && 'updatedItems' in result) {
+            const { newItems, updatedItems } = result as { 
+              newItems: any[], 
+              updatedItems: any[] 
+            };
+            
+            console.log(
+              `Added ${newItems.length} new items and updated quantities for ${updatedItems.length} existing items in ${selectedLocation}`
+            );
+            
+            // Show detailed success toast
+            if (updatedItems.length > 0) {
+              toast({
+                title: "Items Recognized & Inventory Updated",
+                description: `Added ${newItems.length} new items and updated quantities for ${updatedItems.length} existing items in your ${selectedLocation.toLowerCase()}.`,
+                duration: 4000,
+              });
+            } else {
+              toast({
+                title: "Items Recognized & Added",
+                description: `Successfully identified and added ${newItems.length} new items to your ${selectedLocation.toLowerCase()}.`,
+                duration: 3000,
+              });
+            }
+          } else {
+            // Fallback to original message if detailed results not available
+            console.log(`Added ${recognizedItems.length} items to ${selectedLocation}`);
+            
+            toast({
+              title: "Items Recognized & Added",
+              description: `Successfully identified and added ${recognizedItems.length} items to your ${selectedLocation.toLowerCase()}.`,
+              duration: 3000,
+            });
+          }
         } catch (error) {
           console.error("Failed to add items to inventory:", error);
           

@@ -52,15 +52,20 @@ export async function recognizeImage(imageBase64: string) {
 }
 
 /**
- * Adds recognized items to the inventory
+ * Adds recognized items to the inventory, updating quantities for existing items
  * 
  * @param items - The items to add to inventory
  * @param location - The storage location (Fridge or Cabinet)
+ * @returns Object containing information about which items were added vs updated
  */
 export async function addItemsToInventory(items: any[], location: string) {
   try {
-    const addPromises = items.map(item => 
-      apiRequest(
+    const newItems: any[] = [];
+    const updatedItems: any[] = [];
+    
+    // Process each item sequentially so we can track updates vs. new items
+    for (const item of items) {
+      const response = await apiRequest(
         'POST',
         '/api/inventory',
         {
@@ -75,11 +80,32 @@ export async function addItemsToInventory(items: any[], location: string) {
           ).toISOString(),
           addedDate: new Date().toISOString()
         }
-      )
-    );
+      );
+      
+      if (!response.ok) {
+        throw new Error(`Failed to add item: ${item.name}`);
+      }
+      
+      const result = await response.json();
+      
+      // Check if this was an update to an existing item
+      if (result.quantityUpdated) {
+        updatedItems.push({
+          ...result,
+          previousQuantity: result.previousQuantity
+        });
+      } else {
+        newItems.push(result);
+      }
+    }
     
-    await Promise.all(addPromises);
-    return true;
+    console.log(`Inventory update complete: ${newItems.length} new items, ${updatedItems.length} updated items`);
+    
+    return {
+      success: true,
+      newItems,
+      updatedItems
+    };
   } catch (error) {
     console.error("Error adding items to inventory:", error);
     throw new Error("Failed to add items to inventory");

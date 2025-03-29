@@ -56,7 +56,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: errorMessage });
       }
       
-      const item = await storage.createInventoryItem(validationResult.data);
+      const itemData = validationResult.data;
+      
+      // Check if an item with the same name already exists
+      const existingItem = await storage.getInventoryItemByName(itemData.name);
+      
+      if (existingItem && existingItem.location === itemData.location) {
+        // If item exists, update quantity instead of creating a new one
+        let newQuantity = parseFloat(existingItem.quantity || '0');
+        const additionalQuantity = parseFloat(itemData.quantity || '1');
+        
+        // Add the quantities
+        newQuantity += additionalQuantity;
+        
+        // Update the existing item with the new quantity
+        const updatedItem = await storage.updateInventoryItem(existingItem.id, {
+          ...itemData,
+          quantity: newQuantity.toString()
+        });
+        
+        if (updatedItem) {
+          return res.status(200).json({
+            ...updatedItem,
+            quantityUpdated: true,
+            previousQuantity: existingItem.quantity
+          });
+        }
+      }
+      
+      // If no existing item or update failed, create a new item
+      const item = await storage.createInventoryItem(itemData);
       res.status(201).json(item);
     } catch (err) {
       console.error("Error creating inventory item:", err);

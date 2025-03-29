@@ -11,6 +11,7 @@ export interface IStorage {
   getInventoryItems(): Promise<InventoryItem[]>;
   getInventoryItemById(id: number): Promise<InventoryItem | undefined>;
   getInventoryItemsByLocation(location: string): Promise<InventoryItem[]>;
+  getInventoryItemByName(name: string): Promise<InventoryItem | undefined>;
   createInventoryItem(item: InsertInventoryItem): Promise<InventoryItem>;
   updateInventoryItem(id: number, item: Partial<InsertInventoryItem>): Promise<InventoryItem | undefined>;
   deleteInventoryItem(id: number): Promise<boolean>;
@@ -62,10 +63,33 @@ export class MemStorage implements IStorage {
     );
   }
 
+  async getInventoryItemByName(name: string): Promise<InventoryItem | undefined> {
+    // Find an item with the exact name (case-insensitive)
+    return Array.from(this.inventory.values()).find(
+      (item) => item.name.toLowerCase() === name.toLowerCase(),
+    );
+  }
+
   async createInventoryItem(insertItem: InsertInventoryItem): Promise<InventoryItem> {
     const id = this.inventoryCurrentId++;
     const addedDate = new Date();
-    const item: InventoryItem = { ...insertItem, id, addedDate };
+    
+    // Ensure all required fields have non-undefined values
+    const processedItem = {
+      ...insertItem,
+      quantity: insertItem.quantity || null,
+      unit: insertItem.unit || null,
+      imageUrl: insertItem.imageUrl || null,
+      confidence: insertItem.confidence || null,
+      expiryDate: insertItem.expiryDate || null
+    };
+    
+    const item: InventoryItem = { 
+      ...processedItem, 
+      id, 
+      addedDate 
+    };
+    
     this.inventory.set(id, item);
     return item;
   }
@@ -76,7 +100,20 @@ export class MemStorage implements IStorage {
       return undefined;
     }
     
-    const updatedItem: InventoryItem = { ...existingItem, ...updateItem };
+    // Process the update data to ensure type consistency
+    const processedUpdate: Partial<InventoryItem> = {};
+    
+    // Copy fields from the update object, ensuring they have correct types
+    if ('name' in updateItem) processedUpdate.name = updateItem.name;
+    if ('location' in updateItem) processedUpdate.location = updateItem.location;
+    if ('quantity' in updateItem) processedUpdate.quantity = updateItem.quantity ?? null;
+    if ('unit' in updateItem) processedUpdate.unit = updateItem.unit ?? null;
+    if ('imageUrl' in updateItem) processedUpdate.imageUrl = updateItem.imageUrl ?? null;
+    if ('confidence' in updateItem) processedUpdate.confidence = updateItem.confidence ?? null;
+    if ('expiryDate' in updateItem) processedUpdate.expiryDate = updateItem.expiryDate ?? null;
+    
+    // Create the updated item with proper typing
+    const updatedItem: InventoryItem = { ...existingItem, ...processedUpdate };
     this.inventory.set(id, updatedItem);
     return updatedItem;
   }
