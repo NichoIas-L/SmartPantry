@@ -236,7 +236,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 - usedInventoryItems: array of ingredient names that match my inventory items
                 - cookTime: cooking time as a string (e.g. "30 min")
                 - calories: approximate calories as a number
-                - image: a URL to a representative image (use urls from unsplash.com)
+                - image: a URL to a high-quality, appetizing image of the EXACT dish from unsplash.com. Make sure the image URL looks like "https://images.unsplash.com/photo-[ID]?..." and is a real, valid URL to a food image that matches this exact recipe (not a generic food image). The images should be professional food photography that would make someone want to eat this dish.
                 - isFavorite: set to false
                 
                 Return complete, valid JSON without any explanation text.`

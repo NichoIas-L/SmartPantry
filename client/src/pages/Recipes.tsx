@@ -181,17 +181,32 @@ export default function Recipes() {
           ) : (
             <div className="grid grid-cols-2 gap-4">
               {filteredRecipes.map((recipe) => (
-                <div key={recipe.id} className="bg-white rounded-xl overflow-hidden shadow-sm">
+                <div key={recipe.id} className="bg-white rounded-xl overflow-hidden shadow-md">
                   <div className="aspect-square bg-gray-200 relative">
                     <img 
                       src={recipe.image} 
                       alt={recipe.title} 
                       className="w-full h-full object-cover"
+                      onError={(e) => {
+                        // Fallback if image fails to load
+                        const target = e.target as HTMLImageElement;
+                        target.src = `https://images.unsplash.com/photo-1547592180-85f173990554?q=80&w=1470&auto=format&fit=crop`;
+                      }}
                     />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent"></div>
+                    <div className="absolute bottom-3 left-3 right-3">
+                      <h3 className="font-semibold text-white text-sm line-clamp-2 mb-1 drop-shadow-sm">{recipe.title}</h3>
+                      <div className="flex items-center text-xs text-white/90">
+                        <Clock className="w-3.5 h-3.5 mr-1" />
+                        <span>{recipe.cookTime}</span>
+                        <div className="mx-2">•</div>
+                        <span>{recipe.calories} Kcal</span>
+                      </div>
+                    </div>
                     <Button
                       variant="ghost"
                       size="icon"
-                      className={`absolute top-2 right-2 bg-white/80 backdrop-blur-sm rounded-full h-8 w-8 p-1.5 ${
+                      className={`absolute top-3 right-3 bg-white/80 backdrop-blur-sm rounded-full h-8 w-8 p-1.5 ${
                         recipe.isFavorite ? 'text-red-500' : 'text-gray-500'
                       }`}
                       onClick={() => toggleFavorite(recipe.id)}
@@ -199,16 +214,14 @@ export default function Recipes() {
                       <Heart className="h-full w-full" fill={recipe.isFavorite ? "currentColor" : "none"} />
                     </Button>
                   </div>
-                  <div className="p-3">
-                    <h3 className="font-medium text-sm line-clamp-2 mb-2">{recipe.title}</h3>
-                    <div className="flex justify-between items-center text-xs text-gray-500">
-                      <div>{recipe.calories} Kcal</div>
-                      <div className="flex items-center">
-                        <Clock className="w-3.5 h-3.5 mr-1" />
-                        <span>{recipe.cookTime}</span>
-                      </div>
+                  {/* Added padding for category badge if needed */}
+                  {recipe.category && (
+                    <div className="p-2">
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-teal-100 text-teal-800">
+                        {recipe.category}
+                      </span>
                     </div>
-                  </div>
+                  )}
                 </div>
               ))}
             </div>

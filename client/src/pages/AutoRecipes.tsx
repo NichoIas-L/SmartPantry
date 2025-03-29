@@ -189,17 +189,32 @@ export default function AutoRecipes() {
             
             <div className="grid gap-4">
               {suggestedRecipes.map(recipe => (
-                <div key={recipe.id} className="bg-white rounded-xl overflow-hidden shadow-sm">
+                <div key={recipe.id} className="bg-white rounded-xl overflow-hidden shadow-md">
                   <div className="aspect-video bg-gray-200 relative">
                     <img 
                       src={recipe.image} 
                       alt={recipe.title} 
                       className="w-full h-full object-cover"
+                      onError={(e) => {
+                        // Fallback if image fails to load
+                        const target = e.target as HTMLImageElement;
+                        target.src = `https://images.unsplash.com/photo-1547592180-85f173990554?q=80&w=1470&auto=format&fit=crop`;
+                      }}
                     />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent"></div>
+                    <div className="absolute bottom-3 left-3 right-3">
+                      <h3 className="font-semibold text-lg text-white mb-1 drop-shadow-sm">{recipe.title}</h3>
+                      <div className="flex items-center text-xs text-white/90">
+                        <Clock className="w-3.5 h-3.5 mr-1" />
+                        <span>{recipe.cookTime}</span>
+                        <div className="mx-2">•</div>
+                        <span>{recipe.calories} Kcal</span>
+                      </div>
+                    </div>
                     <Button
                       variant="ghost"
                       size="icon"
-                      className={`absolute top-2 right-2 bg-white/80 backdrop-blur-sm rounded-full h-8 w-8 p-1.5 ${
+                      className={`absolute top-3 right-3 bg-white/80 backdrop-blur-sm rounded-full h-9 w-9 p-1.5 ${
                         recipe.isFavorite ? 'text-red-500' : 'text-gray-500'
                       }`}
                       onClick={() => toggleFavorite(recipe.id)}
@@ -208,37 +223,29 @@ export default function AutoRecipes() {
                     </Button>
                   </div>
                   <div className="p-4">
-                    <h3 className="font-medium text-base mb-1">{recipe.title}</h3>
-                    <p className="text-sm text-gray-600 mb-3">{recipe.description}</p>
+                    <p className="text-sm text-gray-600 mb-4">{recipe.description}</p>
                     
-                    <div className="flex justify-between items-center text-xs text-gray-500 mb-3">
-                      <div>{recipe.calories} Kcal</div>
-                      <div className="flex items-center">
-                        <Clock className="w-3.5 h-3.5 mr-1" />
-                        <span>{recipe.cookTime}</span>
-                      </div>
-                    </div>
-                    
-                    <div className="mb-3">
-                      <h4 className="text-sm font-medium mb-1">Ingredients:</h4>
-                      <div className="flex flex-wrap gap-1">
+                    <div className="mb-4">
+                      <h4 className="text-sm font-medium mb-2">Ingredients:</h4>
+                      <div className="flex flex-wrap gap-1.5">
                         {recipe.ingredients.map((ingredient, i) => (
                           <span 
                             key={i} 
                             className={`text-xs px-2 py-1 rounded-full ${
-                              recipe.usedInventoryItems.includes(ingredient.toLowerCase())
+                              recipe.usedInventoryItems.some(item => 
+                                ingredient.toLowerCase().includes(item.toLowerCase()))
                                 ? 'bg-teal-100 text-teal-800' 
                                 : 'bg-gray-100 text-gray-800'
                             }`}
                           >
-                            {capitalizeWords(ingredient)}
+                            {ingredient}
                           </span>
                         ))}
                       </div>
                     </div>
                     
                     <Button
-                      className="w-full bg-teal-500 hover:bg-teal-600"
+                      className="w-full bg-teal-500 hover:bg-teal-600 shadow-sm"
                     >
                       View Full Recipe
                     </Button>
