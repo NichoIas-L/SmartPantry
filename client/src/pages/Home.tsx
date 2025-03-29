@@ -102,7 +102,7 @@ export default function Home({ onStartNewSession }: HomeProps) {
 
   return (
     <>
-      <div className="flex-1 overflow-y-auto pb-16 bg-gray-50">
+      <div className="flex-1 overflow-y-auto pb-20 bg-gray-50">
         {/* Header section */}
         <header className="px-5 pt-5 pb-3">
           <div className="flex items-center text-gray-400 mb-1.5">
@@ -281,9 +281,9 @@ export default function Home({ onStartNewSession }: HomeProps) {
       </div>
 
       {/* Primary Action Button */}
-      <div className="fixed bottom-20 right-5 z-20">
+      <div className="fixed bottom-24 right-5 z-20">
         <Button
-          className="rounded-full h-16 w-16 bg-teal-500 hover:bg-teal-600 shadow-lg flex items-center justify-center"
+          className="rounded-full h-14 w-14 bg-teal-500 hover:bg-teal-600 shadow-lg flex items-center justify-center"
           onClick={() => {
             if (onStartNewSession) {
               onStartNewSession();
@@ -291,7 +291,7 @@ export default function Home({ onStartNewSession }: HomeProps) {
             navigate('/camera');
           }}
         >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
             <circle cx="12" cy="13" r="4"></circle>
           </svg>

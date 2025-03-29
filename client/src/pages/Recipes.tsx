@@ -89,7 +89,7 @@ export default function Recipes() {
 
   return (
     <>
-      <div className="flex-1 overflow-y-auto pb-16 bg-gray-50">
+      <div className="flex-1 overflow-y-auto pb-20 bg-gray-50">
         {/* Header */}
         <header className="px-5 pt-5 pb-3">
           <div className="flex items-center mb-4">

@@ -1,9 +1,9 @@
-import { Home, Calendar, User, ChefHat } from 'lucide-react';
+import { Home, Search, Bell, User, ChefHat } from 'lucide-react';
 import { useLocation } from 'wouter';
 import { Button } from "@/components/ui/button";
 
 interface NavigationProps {
-  activePage: 'home' | 'expiring' | 'profile' | 'recipes';
+  activePage: 'home' | 'search' | 'notifications' | 'profile' | 'recipes';
 }
 
 export default function Navigation({ activePage }: NavigationProps) {
@@ -12,50 +12,50 @@ export default function Navigation({ activePage }: NavigationProps) {
   // Helper for active link style
   const getNavItemClasses = (page: string) => {
     return activePage === page 
-      ? "text-primary" 
-      : "text-gray-600";
+      ? "text-teal-500" 
+      : "text-gray-400";
   };
 
   return (
-    <nav className="bg-white border-t border-gray-200 fixed bottom-0 left-0 right-0 z-10">
-      <div className="max-w-md mx-auto px-4 relative">
+    <nav className="bg-white rounded-t-[32px] fixed bottom-0 left-0 right-0 z-10 shadow-lg">
+      <div className="max-w-md mx-auto px-8 relative">
         {/* Middle elevated button */}
-        <div className="absolute left-1/2 transform -translate-x-1/2 -top-6">
+        <div className="absolute left-1/2 transform -translate-x-1/2 -top-8">
           <Button
             onClick={() => navigate('/recipes')}
-            className={`rounded-full h-14 w-14 bg-gray-800 hover:bg-gray-700 shadow-md flex items-center justify-center ${activePage === 'recipes' ? 'bg-gray-700' : ''}`}
+            className="rounded-full h-16 w-16 bg-gray-900 hover:bg-gray-800 shadow-lg flex items-center justify-center"
           >
-            <ChefHat className="h-6 w-6 text-white" />
+            <ChefHat className="h-7 w-7 text-white" />
           </Button>
         </div>
         
-        <div className="flex justify-around">
+        <div className="flex justify-between py-5">
           <button 
             onClick={() => navigate('/')}
-            className={`flex flex-col items-center py-3 px-4 ${getNavItemClasses('home')}`}
+            className={`flex items-center justify-center w-10 h-10 ${getNavItemClasses('home')}`}
           >
-            <Home className="h-6 w-6" />
-            <span className="text-xs mt-1">Home</span>
+            <Home strokeWidth={1.5} className="h-7 w-7" />
           </button>
           
           <button 
-            className={`flex flex-col items-center py-3 px-4 ${getNavItemClasses('expiring')}`}
+            className={`flex items-center justify-center w-10 h-10 ${getNavItemClasses('search')}`}
           >
-            <Calendar className="h-6 w-6" />
-            <span className="text-xs mt-1">Expiring</span>
+            <Search strokeWidth={1.5} className="h-7 w-7" />
           </button>
           
           {/* Empty space for the middle button */}
-          <div className="w-16 opacity-0 flex flex-col items-center py-3 px-4">
-            <ChefHat className="h-6 w-6" />
-            <span className="text-xs mt-1">Recipes</span>
-          </div>
+          <div className="w-16"></div>
           
           <button 
-            className={`flex flex-col items-center py-3 px-4 ${getNavItemClasses('profile')}`}
+            className={`flex items-center justify-center w-10 h-10 ${getNavItemClasses('notifications')}`}
           >
-            <User className="h-6 w-6" />
-            <span className="text-xs mt-1">Profile</span>
+            <Bell strokeWidth={1.5} className="h-7 w-7" />
+          </button>
+          
+          <button 
+            className={`flex items-center justify-center w-10 h-10 ${getNavItemClasses('profile')}`}
+          >
+            <User strokeWidth={1.5} className="h-7 w-7" />
           </button>
         </div>
       </div>
