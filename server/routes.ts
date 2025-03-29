@@ -318,6 +318,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 - cookTime: cooking time as a string (e.g. "30 min")
                 - calories: approximate calories as a number
                 - image: a URL to a high-quality, appetizing image of the EXACT dish from unsplash.com. Make sure the image URL looks like "https://images.unsplash.com/photo-[ID]?..." and is a real, valid URL to a food image that matches this exact recipe (not a generic food image). The images should be professional food photography that would make someone want to eat this dish.
+                - youtubeVideoId: a string containing a YouTube video ID for a good instructional video that shows how to make this recipe or something very similar. This should be just the ID portion (e.g., "dQw4w9WgXcQ"), not the full URL. Make sure this is a real, valid YouTube video ID that would work when embedded.
                 - isFavorite: set to false
                 
                 Return complete, valid JSON without any explanation text.`;
@@ -327,7 +328,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         model: "claude-3-7-sonnet-20250219", // the newest Anthropic model is "claude-3-7-sonnet-20250219" which was released February 24, 2025
         max_tokens: 4000,
         system:
-          "You are a cooking assistant that specializes in creating recipes from available ingredients ONLY. You need to respect ingredient quantities when suggesting recipes. Never suggest ingredients that aren't in the user's inventory, and never suggest using more of an ingredient than the user has available.",
+          "You are a cooking assistant that specializes in creating recipes from available ingredients ONLY. You need to respect ingredient quantities when suggesting recipes. Never suggest ingredients that aren't in the user's inventory, and never suggest using more of an ingredient than the user has available. For each recipe, provide a valid YouTube video ID for an instructional cooking video that closely matches the recipe. The video ID should be the unique identifier from a YouTube URL (e.g., 'dQw4w9WgXcQ' from https://www.youtube.com/watch?v=dQw4w9WgXcQ). Make sure to suggest real, existing YouTube videos that show how to prepare the same or very similar recipes.",
         messages: [
           {
             role: "user",

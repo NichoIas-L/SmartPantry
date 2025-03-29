@@ -37,6 +37,8 @@ interface RecipeDetailsModalProps {
     };
     // Preparation steps
     steps?: string[];
+    // YouTube video ID
+    youtubeVideoId?: string;
   };
   focusIngredient?: string | null;
   // Control for external open/close (optional)
@@ -213,7 +215,7 @@ export default function RecipeDetailsModal({
           </div>
           
           {/* Preparation Steps */}
-          <div className="mb-6">
+          <div className="mb-8">
             <h3 className="text-lg font-semibold mb-3">Preparation</h3>
             <ol className="space-y-4 ml-5">
               {steps.map((step, index) => (
@@ -224,6 +226,22 @@ export default function RecipeDetailsModal({
               ))}
             </ol>
           </div>
+          
+          {/* Video Tutorial */}
+          {recipe.youtubeVideoId && (
+            <div className="mb-6">
+              <h3 className="text-lg font-semibold mb-3">Video Tutorial</h3>
+              <div className="aspect-video bg-gray-100 rounded-lg overflow-hidden">
+                <iframe
+                  src={`https://www.youtube.com/embed/${recipe.youtubeVideoId}`}
+                  title={`${recipe.title} Video Tutorial`}
+                  className="w-full h-full"
+                  allowFullScreen
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                ></iframe>
+              </div>
+            </div>
+          )}
         </ScrollArea>
         
         <DialogFooter className="bg-gray-50 p-4">

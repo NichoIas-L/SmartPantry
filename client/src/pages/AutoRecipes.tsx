@@ -18,6 +18,7 @@ interface SuggestedRecipe {
   calories: number;
   image: string;
   isFavorite: boolean;
+  youtubeVideoId?: string;
 }
 
 export default function AutoRecipes() {
@@ -410,6 +411,8 @@ export default function AutoRecipes() {
             calories: selectedRecipe.calories,
             image: selectedRecipe.image,
             isFavorite: selectedRecipe.isFavorite,
+            // Use YouTube video ID from API response or fallback to undefined
+            youtubeVideoId: selectedRecipe.youtubeVideoId,
             // Adding additional fields that RecipeDetailsModal expects
             nutrition: {
               protein: 25,
