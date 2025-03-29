@@ -208,25 +208,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const message = await anthropic.messages.create({
         model: "claude-3-7-sonnet-20250219", // the newest Anthropic model is "claude-3-7-sonnet-20250219" which was released February 24, 2025
         max_tokens: 4000,
-        system: "You are a cooking assistant that specializes in creating recipes from available ingredients. When given a list of ingredients, suggest creative and practical recipes.",
+        system: "You are a cooking assistant that specializes in creating recipes from available ingredients ONLY. Never suggest ingredients that aren't in the user's inventory.",
         messages: [
           {
             role: "user",
             content: [
               {
                 type: "text",
-                text: `I want to make a meal with these specific ingredients: ${ingredients.join(", ")}.
+                text: `I have ONLY these ingredients in my inventory: ${allIngredientNames.join(", ")}.
                 
-                I also have these other ingredients in my inventory that I could use: ${allIngredientNames.filter(name => !ingredients.includes(name)).join(", ")}.
-                
-                Please suggest 3 recipes I could make that use as many of my selected ingredients as possible. 
+                Please suggest 3 recipes I could make using ONLY these ingredients. Do not suggest any ingredients that aren't in my inventory list above. Keep recipes simple and practical.
                 
                 Return your response as a valid JSON array of recipe objects with these properties:
                 - id: a unique string (use uuid-like format)
                 - title: recipe name
                 - description: brief description (1-2 sentences)
-                - ingredients: array of all ingredients needed (include quantities)
-                - usedInventoryItems: array of ingredient names that match my selected ingredients
+                - ingredients: array of all ingredients needed (include quantities, but ONLY using items from my inventory)
+                - usedInventoryItems: array of ingredient names that match my inventory items
                 - cookTime: cooking time as a string (e.g. "30 min")
                 - calories: approximate calories as a number
                 - image: a URL to a representative image (use urls from unsplash.com)

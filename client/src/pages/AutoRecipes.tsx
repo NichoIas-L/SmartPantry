@@ -35,7 +35,7 @@ export default function AutoRecipes() {
     }
   }, [isLoading]);
 
-  // Generate recipe suggestions based on inventory items
+  // Generate recipe suggestions using ONLY inventory items
   const generateRecipes = async () => {
     if (inventoryItems.length === 0) {
       toast({
@@ -49,8 +49,13 @@ export default function AutoRecipes() {
     setIsGenerating(true);
     
     try {
-      // Extract ingredient names from inventory items
+      // Extract all ingredient names from inventory items
       const ingredients = inventoryItems.map((item: any) => item.name.toLowerCase());
+      
+      toast({
+        title: "Finding recipes",
+        description: "Searching for recipes using only your inventory items",
+      });
       
       // Call the backend API
       const response = await fetch('/api/recipe-suggestions', {
@@ -104,7 +109,7 @@ export default function AutoRecipes() {
             >
               <ArrowLeft className="h-6 w-6" />
             </Button>
-            <h1 className="text-xl font-bold">What Can I Cook?</h1>
+            <h1 className="text-xl font-bold">Cook With My Ingredients</h1>
             <div className="ml-auto">
               <Button
                 variant="outline"
@@ -117,6 +122,7 @@ export default function AutoRecipes() {
               </Button>
             </div>
           </div>
+          <p className="text-sm text-gray-500">Recipes made with only what's in your inventory</p>
         </header>
 
         {/* Inventory summary */}
